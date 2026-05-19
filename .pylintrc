@@ -1,0 +1,33 @@
+[MAIN]
+py-version = 3.12
+ignore-paths = ^src/sdd/templates/
+
+[MESSAGES CONTROL]
+# Keep CI focused on real defects; style/refactor cleanup is incremental.
+disable=
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring,
+    line-too-long,
+    broad-exception-caught,
+    import-outside-toplevel,
+    too-many-branches,
+    too-many-statements,
+    too-many-locals,
+    too-many-arguments,
+    too-many-positional-arguments,
+    too-many-return-statements,
+    f-string-without-interpolation,
+    unused-import,
+    unused-variable,
+    unused-argument,
+    global-statement,
+    reimported,
+    duplicate-code,
+    use-implicit-booleaness-not-comparison,
+
+[FORMAT]
+max-line-length = 100
+
+[TYPECHECK]
+generated-members = click.*
