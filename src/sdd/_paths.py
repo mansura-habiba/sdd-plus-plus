@@ -63,6 +63,24 @@ def progress_log_path(target: Path | None = None) -> Path:
     return governance_dir(target) / ".progress-log.yaml"
 
 
+def status_md_path(target: Path | None = None) -> Path:
+    """Deprecated alias for ``progress_md_path`` (v0.3 rename)."""
+    return progress_md_path(target)
+
+
+def status_log_path(target: Path | None = None) -> Path:
+    """Deprecated alias for ``progress_log_path`` (v0.3 rename)."""
+    return progress_log_path(target)
+
+
+def acceptance_dir(target: Path | None = None) -> Path:
+    return governance_dir(target) / "acceptance"
+
+
+def tasks_dir(target: Path | None = None) -> Path:
+    return governance_dir(target) / "tasks"
+
+
 def instructions_md_path(target: Path | None = None) -> Path:
     return governance_dir(target) / "instructions.md"
 
