@@ -1,0 +1,72 @@
+# yaml-language-server: $schema=../finding.schema.yaml
+#
+# Worked example — what a real finding looks like.
+# Copy as a starting point: `cp .governance/examples/example-finding.finding.yaml \
+#                              .governance/findings/<your-id>.finding.yaml`
+
+id: minimum-valid-skill-discovery
+title: "Minimum-valid skill must include description even though spec says optional"
+status: confirmed
+severity: medium
+
+discovered_by: "@mansura"
+discovered_at: "2026-05-19"
+discovered_during: "BBS-127"
+ai_assistance: "none"
+
+finding: |
+  The agentskills.io public spec lists `description` as optional, but the bee-skill-registry
+  enterprise overlay (skillctl/agentskills/rules.py) requires it at all strictness levels
+  including `local`. A skill submitted without `description` is rejected with error code
+  AGS-002 — not AGS-001 (missing required) — which suggests the rules layer is treating
+  description as required-by-policy, not required-by-schema.
+
+evidence:
+  - "tests/fixtures/spec-v1/no-description-skill/SKILL.md fails skillctl validate"
+  - "Error output: 'AGS-002: description field is empty or absent (enterprise overlay)'"
+  - "skillctl/src/skillctl/agentskills/rules.py:104 hard-codes the description check"
+
+implications: |
+  Any task generating a skill from scratch (including AI-assisted ones) must include
+  a description even if the public spec hints it's optional. Acceptance specs in the
+  skill-registry capability already account for this — see case
+  `missing-description-rejected` in skill-validation.acceptance.yaml.
+
+  Future work: either lift the requirement out of rules.py into the schema (making it
+  honest), or document the enterprise-overlay deviation in spec-guidelines.md so external
+  users aren't surprised.
+
+mitigation:
+  - "Author skills with a non-empty description field (recommended)"
+  - "If you must support description-less skills, add a passthrough validator override in skillctl config"
+
+related_files:
+  - bbsctl/src/skillctl/agentskills/rules.py
+  - tests/fixtures/spec-v1/no-description-skill/SKILL.md
+  - docs/spec-guidelines.md
+
+related_capabilities:
+  - example-capability
+
+tags:
+  - validation
+  - agentskills-spec
+  - enterprise-overlay
+
+references:
+  - kind: pr
+    value: "#142"
+    note: "First introduced the description requirement"
+  - kind: adr
+    value: "docs/adr/0010-spec-lint-threshold-per-tier.md"
+    note: "Strictness levels that pin this requirement at team+ tier"
+
+status_history:
+  - date: "2026-05-19"
+    status: suspected
+    by: "@mansura"
+    note: "Spotted during test fixture authoring."
+  - date: "2026-05-19"
+    status: confirmed
+    by: "@mansura"
+    note: "Reproduced consistently. Behavior is in rules.py:104."

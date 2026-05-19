@@ -1,0 +1,104 @@
+name: "Task"
+description: "File a unit of engineering work. After this is created, draft a plan with `sdd plan new --task <issue-id>`."
+title: "[TASK] "
+labels: ["task"]
+body:
+
+  - type: markdown
+    attributes:
+      value: |
+        ## What this form does
+        This creates a **task** — the *what* and *why*. After it's filed, run:
+        ```
+        sdd plan new --task <issue-id> --capability <capability-id>
+        ```
+        to draft an AI-generated plan (the *how*). The plan must be reviewed and accepted by a human before any code is written.
+
+        See `.governance/instructions.md` for the full workflow.
+
+  - type: dropdown
+    id: type
+    attributes:
+      label: "Task type"
+      options:
+        - feature
+        - bug
+        - refactor
+        - spike
+        - chore
+        - migration
+    validations:
+      required: true
+
+  - type: input
+    id: capability
+    attributes:
+      label: "Parent capability"
+      description: "Capability id from capabilities/REGISTRY.yaml that this task belongs to."
+      placeholder: "skill-validation"
+    validations:
+      required: true
+
+  - type: input
+    id: one_liner
+    attributes:
+      label: "Goal — one liner"
+      description: 'Single-sentence outcome. "After this ships, X is possible."'
+    validations:
+      required: true
+
+  - type: textarea
+    id: bigger_picture
+    attributes:
+      label: "Goal — bigger picture (≥ 50 chars)"
+      description: "The wider initiative this serves. Forces the externalization of context that was only in someone's head."
+      placeholder: |
+        We're promoting spec-guidelines off placeholder. Without paired pass/fail fixtures,
+        the rules in skillctl are enforced but not documented by example.
+    validations:
+      required: true
+
+  - type: textarea
+    id: done_looks_like
+    attributes:
+      label: "Done looks like"
+      description: 'Concrete observable outcome. Avoid "works correctly".'
+    validations:
+      required: true
+
+  - type: input
+    id: owner
+    attributes:
+      label: "Owner"
+      description: "Human handle of the engineer who will own this work."
+      placeholder: "@your-handle"
+    validations:
+      required: true
+
+  - type: textarea
+    id: related
+    attributes:
+      label: "Related issues / findings"
+      description: "One per line. Findings to be aware of: search `.governance/wiki/findings/` or use `sdd serve list_findings(capability=...)`."
+
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: "Before submitting"
+      options:
+        - label: "I searched for duplicates."
+          required: true
+        - label: "I read the parent capability's spec.md."
+          required: true
+        - label: "I checked existing findings for this capability area."
+          required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ## After this issue is filed
+
+        1. Run `sdd plan new --task <this-issue-id> --capability <capability>` to draft a plan.
+        2. The AI must populate the `challenge` block (concerns + alternatives) before saving.
+        3. A human reviewer runs `sdd plan accept --id <plan-id> --by @handle` to advance status to accepted.
+        4. Only then may implementation start.

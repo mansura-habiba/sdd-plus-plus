@@ -1,0 +1,280 @@
+# Schema for plan/<task-id>.plan.md YAML frontmatter.
+#
+# Plans are AI-generated implementations of a task. They must include:
+#   - A `challenge` block (concerns + alternatives) populated BEFORE the plan is saved.
+#     Sycophancy is a failure mode — AI must surface pushback first.
+#   - Ownership: `accepted_by` is empty in `draft` status. To advance to `accepted`,
+#     a human must run `sdd plan accept --by @<handle>`. AI may not self-accept.
+
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://sdd-plus-plus/schemas/plan.v1"
+title: "Plan (frontmatter)"
+type: object
+additionalProperties: false
+
+required:
+  - plan_id
+  - task_id
+  - capability
+  - generated_by
+  - status
+  - challenge
+  - scope
+
+# When status is `accepted`, the schema requires accepted_by and accepted_at.
+# Encoded as an if/then so AI cannot save an accepted plan with empty signature fields.
+allOf:
+  - if:
+      properties:
+        status:
+          const: accepted
+    then:
+      required: [accepted_by, accepted_at]
+      properties:
+        accepted_by:
+          type: string
+          pattern: "^@[a-zA-Z0-9_-]+$"
+          minLength: 2
+        accepted_at:
+          type: string
+          format: date-time
+
+properties:
+
+  plan_id:
+    type: string
+    pattern: "^[A-Z]+-[0-9]+-plan-[0-9]+$|^plan-[a-z0-9-]+$"
+    description: "e.g. BBS-127-plan-001, or plan-experiment-foo"
+
+  task_id:
+    type: string
+    description: ID of the task this plan addresses (Git issue or capabilities/<cap>/tasks/<id>).
+
+  capability:
+    type: string
+    description: Capability id this plan operates within.
+
+  generated_by:
+    type: object
+    required: [tool, generated_at]
+    additionalProperties: false
+    properties:
+      tool:
+        type: string
+        description: 'AI assistant name, e.g. "claude-code", "cursor", "copilot", or "human" for hand-authored.'
+      model:
+        type: string
+        description: Specific model identifier if available.
+      generated_at:
+        type: string
+        format: date-time
+
+  status:
+    type: string
+    enum: [draft, accepted, executed, archived, rejected]
+    default: draft
+    description: |
+      Lifecycle:
+        draft     — AI has written the plan; humans have not yet accepted.
+        accepted  — A human has signed off via `sdd plan accept --by @handle`.
+        executed  — Implementation is merged; plan retained for provenance.
+        archived  — Plan superseded or no longer relevant.
+        rejected  — A human reviewed and rejected this plan (with reason in markdown body).
+
+  accepted_by:
+    type: string
+    description: |
+      Human handle that accepted this plan. Empty when status: draft. Required when
+      status: accepted. AI may not populate this field — `sdd plan accept` rejects
+      attempts that don't come from a human-driven CLI invocation.
+
+  accepted_at:
+    type: string
+    format: date-time
+
+  # -------------------------------------------------------------------------
+  # Challenge block — mandatory before status: draft
+  # -------------------------------------------------------------------------
+
+  challenge:
+    type: object
+    required:
+      - understood_request
+      - concerns
+      - alternatives_considered
+    additionalProperties: false
+    description: |
+      The AI's pushback record. Populated before the plan is saved. An empty
+      challenge block means the AI complied without thinking — a failure mode.
+    properties:
+      understood_request:
+        type: string
+        minLength: 30
+        description: |
+          The AI's restatement of what the user wants. Forces a "do I understand"
+          check before generating. minLength: 30 prevents "yes, got it" filler.
+      concerns:
+        type: array
+        minItems: 1
+        items: { type: string }
+        description: |
+          Each item is one concern, in plain language. At least one entry required.
+          If the AI has no concerns, the entry should be of the form "No concern
+          surfaced because <evidence>: [checked the spec, found no contradictions; checked
+          findings for this capability, none applicable]".
+      alternatives_considered:
+        type: array
+        minItems: 1
+        items: { type: string }
+        description: |
+          Each item is an alternative approach considered. At least one entry. If no
+          alternative came to mind, the entry should be "No alternative came to mind."
+          This is itself a useful signal — the human knows AI didn't try.
+
+  # -------------------------------------------------------------------------
+  # Scope and AI guardrails
+  # -------------------------------------------------------------------------
+
+  scope:
+    type: object
+    required: [in_scope, non_goals]
+    additionalProperties: false
+    properties:
+      in_scope:
+        type: array
+        minItems: 1
+        items: { type: string }
+      non_goals:
+        type: array
+        minItems: 1
+        items: { type: string }
+        description: At least one bounding non-goal. This is the stop condition.
+
+  ai_context:
+    type: object
+    additionalProperties: false
+    properties:
+      required_reading:
+        type: array
+        items: { type: string }
+      do_not_modify:
+        type: array
+        items: { type: string }
+      preferred_patterns:
+        type: array
+        items: { type: string }
+
+  # -------------------------------------------------------------------------
+  # What the AI plans to do (was the markdown body in v0.3)
+  # -------------------------------------------------------------------------
+
+  steps:
+    type: array
+    description: |
+      Ordered steps the implementation will take. AI populates this when drafting; the
+      human reviewer reads it during acceptance. Each step is one observable change.
+    items: { type: string }
+
+  files_to_touch:
+    type: array
+    description: Paths the plan will modify. Cross-checked against ai_context.do_not_modify.
+    items: { type: string }
+
+  tests_to_satisfy:
+    type: array
+    description: |
+      case_ids from the parent capability's spec.yaml that this plan must make pass.
+      AI cannot invent case_ids — these must already exist in the spec.
+    items: { type: string }
+
+  risks:
+    type: array
+    description: |
+      Risks the AI identified. Each item is one named risk. If the AI sees no risks,
+      one entry should say "No risks surfaced because [evidence]" — bare empty is suspicious.
+    items: { type: string }
+
+  notes:
+    type: string
+    description: Free-form narrative the AI wants the reviewer to see — anything that doesn't fit elsewhere.
+
+  # -------------------------------------------------------------------------
+  # Confidence — AI's own calibration on this plan
+  # -------------------------------------------------------------------------
+
+  confidence:
+    type: object
+    description: |
+      The AI's calibrated confidence on this plan. Foundation for tracking calibration
+      over time (does the AI tend to be right when it says 90%? Does it underclaim at 60%?).
+      Reviewers compare these to actual outcomes after execution.
+    additionalProperties: false
+    properties:
+      overall:
+        type: number
+        minimum: 0.0
+        maximum: 1.0
+        description: |
+          Overall probability that this plan, as written, will deliver the requested outcome.
+          0.9+ should be reserved for cases the AI has very strong evidence for.
+      claims:
+        type: array
+        description: Optional per-claim confidence breakdown.
+        items:
+          type: object
+          required: [claim, confidence]
+          additionalProperties: false
+          properties:
+            claim: { type: string }
+            confidence:
+              type: number
+              minimum: 0.0
+              maximum: 1.0
+
+  # -------------------------------------------------------------------------
+  # Outcome — populated AFTER execution by the human reviewer
+  # -------------------------------------------------------------------------
+
+  outcome:
+    type: object
+    description: |
+      Populated after the plan has been implemented and reviewed. Compared against
+      `confidence` to compute per-tool calibration over time (v0.4 feature).
+    additionalProperties: false
+    properties:
+      result:
+        type: string
+        enum: [success, partial, failure]
+      recorded_by:
+        type: string
+        pattern: "^@[a-zA-Z0-9_-]+$"
+        description: Human who recorded the outcome.
+      recorded_at:
+        type: string
+        format: date-time
+      notes:
+        type: string
+        description: What went right, what surprised us, what the AI got wrong.
+      concerns_materialized:
+        type: array
+        items: { type: string }
+        description: "Which entries from challenge.concerns turned out to be real."
+      concerns_unfounded:
+        type: array
+        items: { type: string }
+        description: "Which entries from challenge.concerns turned out to be wrong."
+
+  # -------------------------------------------------------------------------
+  # Optional execution log — appended during/after acceptance
+  # -------------------------------------------------------------------------
+
+  execution_log:
+    type: array
+    items:
+      type: object
+      required: [ts, message]
+      additionalProperties: false
+      properties:
+        ts: { type: string, format: date-time }
+        actor: { type: string }
+        message: { type: string }

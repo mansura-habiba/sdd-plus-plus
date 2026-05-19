@@ -1,0 +1,125 @@
+# Schema for wiki/findings/<id>.md YAML frontmatter (markdown body is human prose).
+#
+# A finding is a discovered fact about the system: gotcha, confirmed bug pattern, behavioral
+# quirk, non-obvious constraint. Lives in wiki/ because it's part of the team's knowledge.
+#
+# AI may *suggest* findings (status: suspected, ai_assistance: suggested). Only humans may
+# confirm them (status: confirmed). The discovered_by field is always a human handle.
+
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://sdd-plus-plus/schemas/finding.v1"
+title: "Finding (frontmatter)"
+type: object
+additionalProperties: false
+
+required:
+  - id
+  - title
+  - status
+  - discovered_by
+  - discovered_at
+
+properties:
+  id:
+    type: string
+    pattern: "^[a-z][a-z0-9-]+[a-z0-9]$"
+  title:
+    type: string
+    maxLength: 120
+  status:
+    type: string
+    enum: [suspected, confirmed, mitigated, refuted, archived]
+    default: suspected
+  severity:
+    type: string
+    enum: [low, medium, high, critical]
+  discovered_by:
+    type: string
+    pattern: "^@[a-zA-Z0-9_-]+$"
+    description: Human handle. Required.
+  discovered_at:
+    type: string
+    format: date
+  discovered_during:
+    type: string
+    description: Task or plan id this finding was surfaced in.
+  ai_assistance:
+    type: string
+    enum: [none, suggested, draft_only, forbidden]
+    default: none
+  related_files:
+    type: array
+    items: { type: string }
+  related_capabilities:
+    type: array
+    items: { type: string }
+  related_findings:
+    type: array
+    items:
+      type: object
+      required: [id, relationship]
+      additionalProperties: false
+      properties:
+        id: { type: string }
+        relationship:
+          type: string
+          enum: [supersedes, refuted_by, depends_on, see_also, narrows]
+  tags:
+    type: array
+    items: { type: string }
+  references:
+    type: array
+    items:
+      type: object
+      required: [kind, value]
+      additionalProperties: false
+      properties:
+        kind:
+          type: string
+          enum: [issue, pr, adr, commit, url, paper, incident, vendor_doc]
+        value: { type: string }
+        note: { type: string }
+  status_history:
+    type: array
+    items:
+      type: object
+      required: [date, status, by]
+      additionalProperties: false
+      properties:
+        date: { type: string, format: date }
+        status:
+          type: string
+          enum: [suspected, confirmed, mitigated, refuted, archived]
+        by: { type: string }
+        note: { type: string }
+
+  # -------------------------------------------------------------------------
+  # The finding body — what was observed, in detail
+  # -------------------------------------------------------------------------
+
+  finding:
+    type: string
+    minLength: 50
+    description: |
+      The body of the finding. What was observed, what makes it noteworthy. minLength 50
+      enforces real content. Multi-paragraph allowed via YAML block scalars.
+
+  evidence:
+    type: array
+    items: { type: string }
+    description: References to logs, test runs, commits, PRs, incidents — what proves this.
+
+  implications:
+    type: string
+    description: |
+      What this means for future work. Which downstream tasks should treat this as a
+      known constraint? This is the section AI most needs to read when picking up related work.
+
+  mitigation:
+    type: array
+    items: { type: string }
+    description: Workarounds or resolution steps.
+
+  notes:
+    type: string
+    description: Free-form additional context — design implications, open questions, links to discussions.

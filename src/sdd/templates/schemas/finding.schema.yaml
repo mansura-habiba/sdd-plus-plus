@@ -1,0 +1,216 @@
+# yaml-language-server: $schema=https://json-schema.org/draft/2020-12/schema
+#
+# finding.schema.yaml — the LLM-wiki / Knowledge Block layer
+#
+# A finding is a discovered fact about the system: a gotcha, a confirmed bug pattern, a
+# behavioral quirk, a non-obvious constraint. Findings accumulate over time and are queryable
+# by AI assistants (via `sdd serve`) and humans (via `sdd findings list/show`).
+#
+# Difference from ADRs:
+#   - ADRs are top-down architectural decisions, written before work
+#   - Findings are bottom-up discoveries, written during/after work
+#   - A finding can graduate to an ADR if it's load-bearing enough
+#
+# Difference from issues/tickets:
+#   - Issues are work to be done
+#   - Findings are knowledge to be remembered
+#
+# AI-resistance: AI may *suggest* findings (with status `suspected`), but cannot author
+# `confirmed` ones — the schema requires a human in `discovered_by` and a human signature
+# in the status history before confirmation.
+
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://bee-skill-registry/.governance/finding.schema.yaml"
+title: "Finding"
+type: object
+additionalProperties: false
+
+required:
+  - id
+  - title
+  - finding
+  - discovered_by
+  - discovered_at
+  - status
+
+properties:
+
+  # -------------------------------------------------------------------------
+  # Identity
+  # -------------------------------------------------------------------------
+
+  id:
+    type: string
+    description: kebab-case identifier. Filename matches (<id>.finding.yaml).
+    pattern: "^[a-z][a-z0-9-]+[a-z0-9]$"
+
+  title:
+    type: string
+    description: One-line title. Show in lists and searches.
+    maxLength: 120
+
+  # -------------------------------------------------------------------------
+  # Lifecycle status
+  # -------------------------------------------------------------------------
+
+  status:
+    type: string
+    description: |
+      Lifecycle status:
+        - suspected: AI or human noticed something; not yet verified.
+        - confirmed: human has reproduced or verified the finding.
+        - mitigated: the underlying issue has been addressed (link to PR / commit / ADR).
+        - refuted: investigation showed this finding was wrong. Kept for the record.
+        - archived: superseded by a newer finding or no longer relevant.
+    enum: [suspected, confirmed, mitigated, refuted, archived]
+    default: suspected
+
+  severity:
+    type: string
+    description: |
+      How load-bearing is this finding. Only meaningful when status is suspected or confirmed.
+      Critical findings should usually become ADRs.
+    enum: [low, medium, high, critical]
+
+  # -------------------------------------------------------------------------
+  # Provenance
+  # -------------------------------------------------------------------------
+
+  discovered_by:
+    type: string
+    description: |
+      Handle of the human who discovered or verified the finding. Required. AI may surface
+      candidate findings via `sdd serve`, but the `discovered_by` field is always a human.
+
+  discovered_at:
+    type: string
+    format: date
+    description: ISO date when the finding was first recorded.
+
+  discovered_during:
+    type: string
+    description: Task card ID this finding was surfaced in. Optional — some findings come from review or incident.
+
+  ai_assistance:
+    type: string
+    description: |
+      Whether AI helped surface this finding.
+        - none: pure human observation
+        - suggested: AI noticed the pattern; human verified
+        - draft_only: AI drafted the writeup; human edited and confirmed
+        - forbidden: this finding was authored entirely by human (high-risk areas)
+    enum: [none, suggested, draft_only, forbidden]
+    default: none
+
+  # -------------------------------------------------------------------------
+  # The finding itself
+  # -------------------------------------------------------------------------
+
+  finding:
+    type: string
+    minLength: 50
+    description: |
+      The body of the finding. What was observed, what makes it noteworthy.
+      minLength: 50 enforces real content — "X is broken" doesn't validate.
+
+  evidence:
+    type: array
+    items: { type: string }
+    description: |
+      What proves this finding. References to logs, test runs, commits, PRs, incidents.
+      Each item is one independent piece of evidence.
+
+  implications:
+    type: string
+    description: |
+      What this means for future work. What downstream code or decisions does this affect?
+      This is the section AI most needs to read when picking up a related task.
+
+  mitigation:
+    type: array
+    items: { type: string }
+    description: |
+      How to work around or fix the issue. For `mitigated` findings, this is the resolution.
+      For `suspected` / `confirmed`, this is the current best-known workaround.
+
+  # -------------------------------------------------------------------------
+  # Relationships
+  # -------------------------------------------------------------------------
+
+  related_files:
+    type: array
+    items: { type: string }
+    description: |
+      File paths this finding is about. When AI is editing one of these files, the finding
+      should be loaded into context.
+
+  related_capabilities:
+    type: array
+    items: { type: string }
+    description: |
+      Capability IDs this finding affects. Queried by `sdd serve list_findings(capability=...)`.
+
+  related_findings:
+    type: array
+    description: |
+      Other findings this one relates to. Tracks the network of discoveries.
+    items:
+      type: object
+      required: [id, relationship]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+        relationship:
+          type: string
+          enum: [supersedes, refuted_by, depends_on, see_also, narrows]
+
+  tags:
+    type: array
+    items: { type: string }
+    description: |
+      Free-form tags for cross-cutting categorization. Used by `sdd findings list --tag X`.
+      Examples: concurrency, auth, performance, security, data-loss, third-party-bug.
+
+  # -------------------------------------------------------------------------
+  # External references
+  # -------------------------------------------------------------------------
+
+  references:
+    type: array
+    description: |
+      Links to external systems — issue trackers, PRs, ADRs, vendor docs, papers.
+    items:
+      type: object
+      required: [kind, value]
+      additionalProperties: false
+      properties:
+        kind:
+          type: string
+          enum: [issue, pr, adr, commit, url, paper, incident, vendor_doc]
+        value:
+          type: string
+          description: The actual ID, URL, or path.
+        note:
+          type: string
+
+  # -------------------------------------------------------------------------
+  # History
+  # -------------------------------------------------------------------------
+
+  status_history:
+    type: array
+    description: |
+      Chronological record of status changes. The current `status` field must match the
+      most recent entry here. Append-only — never edit historical entries.
+    items:
+      type: object
+      required: [date, status, by]
+      additionalProperties: false
+      properties:
+        date: { type: string, format: date }
+        status:
+          type: string
+          enum: [suspected, confirmed, mitigated, refuted, archived]
+        by: { type: string }
+        note: { type: string }

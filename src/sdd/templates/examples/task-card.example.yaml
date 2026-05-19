@@ -1,0 +1,85 @@
+# yaml-language-server: $schema=../task-card.schema.yaml
+#
+# Worked example — a starter task card. After `sdd init`, every path referenced below
+# exists in your repo, so this example validates clean (including cross-references).
+#
+# Replace this with a real task card when you file your first issue, or use the
+# GitHub Issue Form at .github/ISSUE_TEMPLATE/task-card.yml.
+
+id: SDD-001
+title: "Adopt sdd-plus-plus on this repo"
+type: chore
+tier: team
+
+links:
+  parent_capability: .governance/capabilities/example-capability.yaml
+  related_issues: []
+  depends_on: []
+  design_docs:
+    - .governance/philosophy.md
+    - .governance/testing-philosophy.md
+
+goal:
+  one_liner: "After this ships, every PR in this repo passes the sdd governance gates."
+  bigger_picture: |
+    We are adopting sdd-plus-plus to externalize the design context that today lives in
+    one person's head and to give our AI assistants a structured spec to satisfy rather
+    than a markdown brief to interpret. This is the first capability task — renaming
+    the bundled example-capability and authoring a real one — that moves us from
+    "framework installed" to "framework adopted." Subsequent task cards extend the
+    contract test suite per the adoption playbook in .governance/README.md.
+  done_looks_like: |
+    The bundled example-capability.yaml is renamed for our first real feature area.
+    Its contract / tasks_must / forbidden / owner sections are filled in. At least one
+    contract test in tests/contract/ references a case_id from a ratified acceptance
+    spec. CI's governance.yml workflow is green on the main branch.
+
+scope:
+  in_scope:
+    - "Rename .governance/capabilities/example-capability.yaml to a real capability id"
+    - "Edit the renamed file: contract, tasks_must, forbidden, owner"
+    - "Run `sdd generate-acceptance --capability <id> --from-tests tests/`"
+    - "Ratify the generated acceptance spec (status: ratified, add ratified_at)"
+  non_goals:
+    - "Do not author a second capability in this task. One at a time."
+    - "Do not refactor existing tests beyond renaming or relinking — that is separate work."
+    - "Do not modify the bundled schemas. Schema changes require a separate chore-framework PR."
+
+acceptance:
+  spec: .governance/examples/skill-validation.acceptance.yaml
+  contract_tests:
+    - "tests/contract/test_task_card_validates.py::test_task_card_validates_against_schema"
+    - "tests/contract/test_task_card_validates.py::test_capability_validates_against_schema"
+  manual_checks:
+    - "Reviewer confirms the capability is the right granularity — not too narrow (would spawn 30 task cards) and not too broad (would be unreviewable)."
+
+non_functional:
+  performance: "n/a — adoption task, not a runtime change"
+  compatibility: "Backwards-compatible. CI gate is additive on a new workflow file."
+
+ai_context:
+  required_reading:
+    - .governance/philosophy.md
+    - .governance/README.md
+    - .governance/testing-philosophy.md
+    - .governance/capabilities/example-capability.yaml
+    - AGENTS.md
+  search_for_duplicates: true
+  do_not_modify:
+    - .governance/task-card.schema.yaml
+    - .governance/capability-spec.schema.yaml
+    - .governance/acceptance.schema.yaml
+  preferred_patterns:
+    - "Match the structure of the bundled example-capability.yaml — do not invent a new shape."
+    - "Use kebab-case for the capability id."
+    - "Author goal.bigger_picture in your own voice. AI drafts are a tell — humans curate."
+
+ownership:
+  author: "@TODO-your-handle"
+  reviewer: "@TODO-reviewer-handle"
+
+estimate:
+  points: 3
+  budget_hours: 6
+
+status: draft

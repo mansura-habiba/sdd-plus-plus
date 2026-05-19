@@ -1,0 +1,102 @@
+# yaml-language-server: $schema=../../../../src/sdd/_schemas/plan.schema.yaml
+#
+# Plan — canonical, machine-readable, the AI's proposed implementation of a task.
+# The `challenge` block MUST be populated honestly before saving (empty = invalid plan).
+# Only humans may set `accepted_by` via `sdd plan accept --by @<handle>`.
+#
+# This is a starter example. Real plans live alongside it at plan/<task-id>-plan-XXX.plan.yaml.
+
+plan_id: plan-example-001
+task_id: EXAMPLE-1
+capability: example-feature
+
+generated_by:
+  tool: human
+  generated_at: "2026-05-19T10:00:00Z"
+
+status: draft
+accepted_by: ""
+accepted_at: ""
+
+# -------------------------------------------------------------------------
+# REQUIRED — the AI's pushback record. Sycophancy is a failure mode.
+# Empty fields here mean the AI complied without thinking.
+# -------------------------------------------------------------------------
+
+challenge:
+  understood_request: |
+    The user wants a working example plan file in the templates folder so adopters can
+    see the expected shape. This is an artifact for new users, not a real implementation.
+  concerns:
+    - "If readers copy-paste this without editing, the plan directory fills with stale example data. Mitigation: TODO sentinels force editing."
+    - "An example plan with status: draft and empty accepted_by may confuse validators. We confirmed: schema permits accepted_by='' when status=draft."
+  alternatives_considered:
+    - "Could omit the example plan entirely and only document the format in instructions.md — rejected because adopters learn faster from a worked example than from prose."
+
+# -------------------------------------------------------------------------
+# Scope and AI guardrails
+# -------------------------------------------------------------------------
+
+scope:
+  in_scope:
+    - "Ship a worked example of plan.yaml so adopters know what fields look like populated."
+    - "Demonstrate the challenge block populated honestly."
+  non_goals:
+    - "This is a template — not a real plan against a real task."
+    - "Do not implement anything from this plan; it is illustrative."
+
+ai_context:
+  required_reading:
+    - .governance/wiki/principles.md
+    - .governance/instructions.md
+    - .governance/capabilities/example-feature/spec.yaml
+  do_not_modify:
+    - .governance/_schemas/
+    - .governance/wiki/principles.md
+  preferred_patterns:
+    - "Use the YAML format demonstrated by this file."
+    - "Populate every required field honestly; AI may not skip the challenge block."
+
+# -------------------------------------------------------------------------
+# Implementation steps (was the markdown body in v0.3)
+# -------------------------------------------------------------------------
+
+steps:
+  - "Step one — files to create or change, with paths."
+  - "Step two — tests to write or satisfy, by case_id."
+  - "Step three — validations to run before claiming done."
+
+files_to_touch:
+  - "path/to/file_one.py"
+  - "path/to/file_two.py"
+
+tests_to_satisfy:
+  - "positive-happy-path"
+  - "rejects-invalid-input"
+
+risks:
+  - "Risk one — example. Real plans should identify real risks. If you see no risks, say so explicitly with evidence; bare empty array is suspicious."
+
+# -------------------------------------------------------------------------
+# Confidence — AI's self-calibration. Reviewer compares to actual outcome.
+# -------------------------------------------------------------------------
+
+confidence:
+  overall: 0.95
+  claims:
+    - claim: "This is an illustrative template, not a real plan; success criterion is just 'the file validates'."
+      confidence: 0.99
+
+# -------------------------------------------------------------------------
+# Notes — free-form for the reviewer
+# -------------------------------------------------------------------------
+
+notes: |
+  After reading this plan, accept with:
+
+      sdd plan accept --id plan-example-001 --by @your-handle
+
+  That sets accepted_by + accepted_at and advances status to `accepted`. Only then may
+  implementation begin. AI cannot self-accept — `sdd plan accept` validates the --by
+  argument as a human handle pattern, and the MCP `serve` toolset deliberately omits
+  any accept operation.

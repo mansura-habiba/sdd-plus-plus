@@ -1,0 +1,83 @@
+[build-system]
+requires = ["hatchling>=1.21"]
+build-backend = "hatchling.build"
+
+[project]
+name = "sdd-plus-plus"
+version = "0.3.0"
+description = "Spec-Driven Development tooling for AI-assisted teams. Bootstraps any repo with executable specs, structured acceptance, AI rules, and CI gates."
+readme = "README.md"
+license = { text = "Apache-2.0" }
+authors = [
+  { name = "Mansura Habiba", email = "mansura.nw@gmail.com" },
+]
+requires-python = ">=3.11,<3.14"
+
+# Base install — the day-1 promise: `pip install sdd-plus-plus && sdd init` in under 60 seconds.
+# Stdlib + three direct dependencies, all small and battle-tested.
+dependencies = [
+  "click>=8.1,<9.0",          # CLI framework — small, stable, widely understood
+  "jsonschema[format]>=4.18", # JSON Schema Draft 2020-12 validation
+  "ruamel.yaml>=0.18,<1.0",   # YAML round-tripping that preserves comments
+]
+
+# Optional dependency groups (mirrors bee-skill-registry ADR 0003 pattern).
+[project.optional-dependencies]
+# Test discovery for `sdd generate-acceptance --from-tests`.
+generate = [
+  "ast-grep-py>=0.20",
+]
+# MCP server for `sdd serve` — exposes governance as Model Context Protocol tools.
+serve = [
+  "fastmcp>=2.0",
+]
+# Mutation testing integration (future).
+mutation = [
+  "mutmut>=2.4",
+]
+# Everything — used by the CI runners that test sdd-plus-plus itself.
+full = [
+  "ast-grep-py>=0.20",
+  "fastmcp>=2.0",
+  "mutmut>=2.4",
+  "pytest>=7.4",
+  "pytest-cov>=4.1",
+]
+
+[project.scripts]
+sdd = "sdd.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/mansurahabiba/sdd-plus-plus"
+Documentation = "https://github.com/mansurahabiba/sdd-plus-plus#readme"
+Issues = "https://github.com/mansurahabiba/sdd-plus-plus/issues"
+
+# ---------------------------------------------------------------------------
+# Build configuration
+# ---------------------------------------------------------------------------
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/sdd"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"src/sdd/templates" = "sdd/templates"
+
+# ---------------------------------------------------------------------------
+# Tooling configuration
+# ---------------------------------------------------------------------------
+
+[tool.pytest.ini_options]
+minversion = "7.4"
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+markers = [
+  "e2e: end-to-end tests that exercise the CLI in a temp directory (slow)",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+ignore = ["E501"]

@@ -1,0 +1,49 @@
+# Schema for capabilities/REGISTRY.yaml — the continuous capability list.
+#
+# One file, lists every capability the team is building (active, roadmap, deprecated).
+# Replaces the separate ROADMAP.md from v0.2.
+
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://sdd-plus-plus/schemas/registry.v1"
+title: "Capability Registry"
+type: object
+additionalProperties: false
+
+required: [capabilities]
+
+properties:
+  capabilities:
+    type: array
+    description: |
+      The continuous list. Each entry summarizes a capability; the full spec lives at
+      capabilities/<id>/spec.md.
+    items:
+      type: object
+      required: [id, name, status, owner, one_liner, spec_path]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          pattern: "^[a-z][a-z0-9-]+[a-z0-9]$"
+        name:
+          type: string
+          maxLength: 80
+        status:
+          type: string
+          enum: [active, roadmap, deprecating, retired]
+        target_release:
+          type: string
+          description: "Optional. For roadmap items, e.g. 'v0.4', '2026-Q3', or a sprint id."
+        owner:
+          type: string
+          pattern: "^@[a-zA-Z0-9_-]+$"
+        one_liner:
+          type: string
+          maxLength: 200
+          description: One sentence summary. Detailed purpose lives in the capability's spec.md.
+        spec_path:
+          type: string
+          description: "Path to the full spec, e.g. capabilities/skill-validation/spec.md."
+        tags:
+          type: array
+          items: { type: string }
