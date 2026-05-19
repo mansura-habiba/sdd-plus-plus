@@ -1,7 +1,6 @@
 # SDD++: A Governance Framework for AI-Assisted Software Engineering
 
 **Version:** 0.3.0 (draft)
-**Author:** Mansura Habiba, with iteration assistance from Claude
 **Status:** Working paper — invites critique and field reports
 **Date:** 2026-05-19
 
