@@ -1,6 +1,7 @@
 # SDD++: A Governance Framework for AI-Assisted Software Engineering
 
 **Version:** 0.3.0 (draft)
+**Author:** Mansura Habiba
 **Status:** Working paper — invites critique and field reports
 **Date:** 2026-05-19
 
@@ -24,7 +25,7 @@ Spec-Driven Development (SDD) emerged in 2025–2026 as a response. The premise 
 
 SDD++ is our attempt at the second-generation answer. It is opinionated where the first generation was permissive, structured where the first generation was prose, and AI-resistant where the first generation was AI-friendly. It exists because the team building it had a concrete operational problem — a mixed-seniority team using AI coding assistants where juniors ignored design documents, seniors over-built, and AI-generated tests reliably passed without proving the right behavior — and it is designed against the specific failure modes that problem surfaced.
 
-This paper is structured in six parts. Section 2 articulates the challenges that motivate the method. Section 3 presents the proposed framework. Section 4 argues why SDD++ improves on existing approaches. Section 5 is honest about limitations. Section 6 outlines future work, including a longer-horizon vision drawn from aviation safety culture.
+This paper is structured in eight parts. Section 2 articulates the challenges that motivate the method. Sections 3 and 4 state the research position and pillars. Section 5 presents the proposed framework. Section 6 argues why SDD++ improves on existing approaches. Section 7 is honest about limitations. Section 8 outlines future work, including a longer-horizon vision drawn from aviation safety culture. Section 9 concludes.
 
 ---
 
@@ -391,7 +392,7 @@ SDD++ preserves TDD's most valuable property (the test is executable proof of be
 
 - **Per-team calibration.** How does the framework balance graduated trust against the operational reality of new AI tools being adopted faster than calibration can be measured?
 - **Plan granularity.** Is one plan per task too coarse for long-running features? Should plans be hierarchical?
-- **AI vs. AI crosscheck.** Section 6 below proposes structurally separated author-AI and reviewer-AI as a v0.4 feature. The unanswered question is whether the productivity cost (double inference) is worth the safety gain in practice.
+- **AI vs. AI crosscheck.** Section 8 below proposes structurally separated author-AI and reviewer-AI as a v0.4 feature. The unanswered question is whether the productivity cost (double inference) is worth the safety gain in practice.
 
 ---
 
@@ -401,7 +402,7 @@ The framework as described is v0.3. Several extensions are in design.
 
 ### 8.1 v0.4: calibration and crosscheck
 
-**Per-tool calibration tracking.** The `signals.json` time-series store (planned) will aggregate per-plan confidence claims against recorded outcomes. AI tools whose 90% predictions hit 60% in practice will have their autonomy downgraded mechanically. This is the operationalization of the calibration story from §3.
+**Per-tool calibration tracking.** The `signals.json` time-series store (planned) will aggregate per-plan confidence claims against recorded outcomes. AI tools whose 90% predictions hit 60% in practice will have their autonomy downgraded mechanically. This is the operationalization of the calibration story from §5.3.
 
 **Structurally separated author-AI and reviewer-AI.** Inspired by separation-of-duties in financial controls. The AI that generates a plan is structurally separate from the AI that reviews it: different prompts, different context budgets, different default models, no shared memory. Disagreement between the two is a signal that surfaces to the human. This doubles inference cost; we believe it more than pays for itself in critical-domain work.
 
@@ -474,6 +475,6 @@ The Python implementation of SDD++ exists as `sdd-plus-plus` v0.3.0 in `/Users/m
 
 **End-to-end dogfood verified.** A fresh directory bootstrapped via `sdd init` produces 13 framework files plus auto-generated progress.md. `sdd validate --strict` exits 0. `sdd plan accept --id plan-example-001 --by @mansura` correctly advances the bundled example plan to `accepted` state, populating `accepted_by` and `accepted_at`. `sdd update-status` appends events to the progress log as expected.
 
-**What remains future work (v0.4+):** calibration tracking via `signals.json` time-series, mutation testing integration (`mutmut` / `Stryker` / `pitest` adapters), the cross-IDE extension, and the structurally-separated author-AI / reviewer-AI crosscheck described in §6.2. The v0.3 release line is feature-complete and tested; v0.4 is the next design horizon, not a blocker on adoption.
+**What remains future work (v0.4+):** calibration tracking via `signals.json` time-series, mutation testing integration (`mutmut` / `Stryker` / `pitest` adapters), the cross-IDE extension, and the structurally-separated author-AI / reviewer-AI crosscheck described in §8.2. The v0.3 release line is feature-complete and tested; v0.4 is the next design horizon, not a blocker on adoption.
 
 The framework is ready for the first real-team trial. The honest measurement question — does adopting SDD++ improve mutation score, reduce incident rate, and improve developer satisfaction in a real codebase over twelve months — remains open and is the focus of the next phase of work.
