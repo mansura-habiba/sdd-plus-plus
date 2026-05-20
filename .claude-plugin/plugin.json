@@ -1,0 +1,51 @@
+{
+  "name": "sdd-plus-plus",
+  "version": "0.3.0",
+  "description": "Spec-Driven Development that ships. Bootstraps any repo with executable specs, structured acceptance, AI assistant rules, and CI gates. Includes Bob (scaffolder) and Dana (reviewer) agents, an MCP server exposing governance as native tools, and slash commands for the full sdd CLI.",
+  "author": {
+    "name": "Mansura Habiba",
+    "email": "mansura.nw@gmail.com"
+  },
+  "homepage": "https://github.com/built-it-here/sdd-plus-plus",
+  "repository": "https://github.com/built-it-here/sdd-plus-plus",
+  "license": "Apache-2.0",
+  "keywords": [
+    "spec-driven-development",
+    "sdd",
+    "governance",
+    "acceptance-testing",
+    "ai-coding",
+    "mcp",
+    "scaffolding",
+    "code-review"
+  ],
+  "agents": [
+    "./.bob/modes/bob-scaffolder.md",
+    "./.bob/modes/dana-reviewer.md"
+  ],
+  "commands": [
+    "./commands/sdd-init.md",
+    "./commands/sdd-validate.md",
+    "./commands/sdd-doctor.md",
+    "./commands/sdd-finding-add.md",
+    "./commands/sdd-review.md",
+    "./commands/sdd-config.md"
+  ],
+  "mcpServers": {
+    "sdd-governance": {
+      "command": "sdd",
+      "args": ["serve", "--target", "${CLAUDE_PROJECT_DIR}"],
+      "env": {
+        "SDD_CONFIG": "${SDD_CONFIG}",
+        "SDD_TIER": "${SDD_TIER}",
+        "SDD_WIKI_REPO": "${SDD_WIKI_REPO}",
+        "SDD_WIKI_BRANCH": "${SDD_WIKI_BRANCH}",
+        "SDD_WIKI_SYNC_MODE": "${SDD_WIKI_SYNC_MODE}",
+        "SDD_WIKI_WRITE_POLICY": "${SDD_WIKI_WRITE_POLICY}",
+        "SDD_WIKI_TOKEN": "${SDD_WIKI_TOKEN}",
+        "SDD_MCP_TRANSPORT": "${SDD_MCP_TRANSPORT}",
+        "SDD_VALIDATION_STRICT": "${SDD_VALIDATION_STRICT}"
+      }
+    }
+  }
+}

@@ -1,0 +1,203 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://github.com/built-it-here/sdd-plus-plus/.governance/sdd-config.schema.yaml"
+title: sdd-plus-plus configuration
+description: |
+  Configuration for sdd-plus-plus. Read in this precedence order
+  (later sources override earlier ones):
+
+    1. Built-in defaults
+    2. ~/.config/sdd/config.yaml          (global user config)
+    3. .governance/config.yaml            (project config)
+    4. Environment variables (SDD_*)      (CI / plugin overrides)
+
+  All keys are optional. An empty file is valid — sdd falls back to defaults.
+
+type: object
+additionalProperties: false
+
+properties:
+
+  schema_version:
+    type: string
+    description: Config schema version. Bump when breaking changes land.
+    enum: ["0.1"]
+    default: "0.1"
+
+  tier:
+    type: string
+    enum: [solo, team]
+    default: solo
+    description: |
+      Default tier for `sdd init`. Solo skips team-only artifacts
+      (capability ownership, multi-reviewer rules). Team enables them.
+
+  governance_dir:
+    type: string
+    default: ".governance"
+    description: |
+      Directory holding capabilities, acceptance, tasks, findings.
+      Relative to the consuming repo's root.
+
+  ai_resistance:
+    type: object
+    additionalProperties: false
+    description: |
+      How sdd treats AI-authored artifacts. The framework's whole reason
+      for existing is making AI-generated work *visible*, not blocking it.
+    properties:
+      default_assistance_policy:
+        type: string
+        enum: [forbidden, disclosed, permitted]
+        default: forbidden
+        description: |
+          Default value for task-card `authored_by.ai_assistance`.
+          `forbidden` — AI may not author assertions. `disclosed` — AI may
+          author but must declare. `permitted` — AI may author silently.
+      require_case_id_on_assertions:
+        type: boolean
+        default: true
+        description: Reject acceptance YAMLs with orphan assertions.
+
+  wiki:
+    type: object
+    additionalProperties: false
+    description: |
+      Optional shared findings repo — the LLM-wiki layer. When set, sdd
+      treats this remote git repo as the canonical home for findings,
+      cloned locally for read access and pushed to when policy permits.
+      Per-project findings under `governance_dir/findings/` remain the
+      working copy; sync to the wiki is explicit.
+    properties:
+      repo:
+        type: string
+        format: uri
+        description: |
+          Git URL of the wiki repo.
+          Examples:
+            https://github.com/mansura-habiba/altaria-llm-wiki
+            git@github.com:org/llm-wiki.git
+      branch:
+        type: string
+        default: main
+        description: Branch to clone and sync against.
+      path_prefix:
+        type: string
+        default: "findings"
+        description: |
+          Subdirectory inside the wiki repo where findings live.
+          Leave as "findings" to keep wiki structure mirroring local.
+      local_cache:
+        type: string
+        default: "~/.cache/sdd/wiki"
+        description: |
+          Where to clone the wiki locally. One sub-folder per wiki repo
+          (keyed by remote URL hash) so multiple wikis can coexist.
+      sync_mode:
+        type: string
+        enum: [manual, auto-pull, auto-sync]
+        default: auto-pull
+        description: |
+          `manual` — only `sdd wiki pull` / `sdd wiki push` touch the cache.
+          `auto-pull` — fetch latest before any read; push is still manual.
+          `auto-sync` — fetch before reads, push after writes. Use with care.
+      write_policy:
+        type: string
+        enum: [forbidden, reviewer-only, any-author]
+        default: reviewer-only
+        description: |
+          Who may push to the wiki. `forbidden` — read-only. `reviewer-only` —
+          only the Dana agent or human reviewers may push (after ingestion).
+          `any-author` — anyone can push. Most teams want reviewer-only.
+      auth:
+        type: object
+        additionalProperties: false
+        description: |
+          Auth for git operations against the wiki. Tokens are never read
+          from the config file itself — only the env var name is stored.
+        properties:
+          method:
+            type: string
+            enum: [ssh, https-token, none]
+            default: ssh
+            description: |
+              `ssh` uses the default SSH identity. `https-token` reads a
+              token from the env var named in `token_env_var`. `none` is
+              for fully public read-only wikis.
+          token_env_var:
+            type: string
+            default: SDD_WIKI_TOKEN
+            description: |
+              Name of the env var holding the token. The token value
+              itself never appears in this file.
+          ssh_key_path:
+            type: string
+            description: |
+              Optional override for the SSH key path. Defaults to git's
+              own resolution if omitted.
+    required: [repo]
+
+  mcp:
+    type: object
+    additionalProperties: false
+    description: Settings for the `sdd serve` MCP server.
+    properties:
+      transport:
+        type: string
+        enum: [stdio, http, sse]
+        default: stdio
+        description: |
+          `stdio` is the default for Claude Code / Cursor / Claude Desktop.
+          `http` and `sse` are for remote setups.
+      http_host:
+        type: string
+        default: "127.0.0.1"
+        description: Bind address when transport is http or sse.
+      http_port:
+        type: integer
+        minimum: 1
+        maximum: 65535
+        default: 8765
+        description: Port when transport is http or sse.
+      expose_validation:
+        type: boolean
+        default: true
+        description: |
+          Whether to expose the `validate` tool to MCP clients. Disable
+          if you don't want assistants triggering schema validation.
+
+  validation:
+    type: object
+    additionalProperties: false
+    description: How strict `sdd validate` should be.
+    properties:
+      strict_mode:
+        type: boolean
+        default: false
+        description: |
+          When true, warnings are treated as errors. Use in CI for repos
+          that have already cleaned up legacy artifacts.
+      treat_tbd_linked_test_as_error:
+        type: boolean
+        default: false
+        description: |
+          When true, any acceptance assertion with `linked_test: TBD`
+          fails validation. Default is false so scaffolding doesn't
+          immediately break the build.
+
+  findings:
+    type: object
+    additionalProperties: false
+    description: Behaviour of the findings subsystem.
+    properties:
+      require_consequences:
+        type: boolean
+        default: true
+        description: |
+          Reject findings with empty or whitespace-only `consequences`.
+          A finding without consequences is a comment, not a finding.
+      auto_link_capability:
+        type: boolean
+        default: true
+        description: |
+          When `sdd findings add --from-task <id>` runs, auto-populate
+          `linked_capability` from the task card.

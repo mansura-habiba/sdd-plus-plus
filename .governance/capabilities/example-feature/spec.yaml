@@ -1,0 +1,101 @@
+# yaml-language-server: $schema=../../../../../src/sdd/_schemas/capability_spec.schema.yaml
+#
+# Capability spec — canonical, machine-readable, the contract for this feature area.
+# AI is forbidden from editing this file. Humans author and maintain it.
+#
+# Schema-driven autocomplete works in VS Code, Cursor, JetBrains with a YAML LSP installed.
+# The schema directive above points at the bundled schema; IDEs will validate as you type.
+
+id: example-feature
+name: "Example Feature"
+purpose: |
+  This is a starter capability. Rename the folder (capabilities/<your-id>/) and edit every
+  field. The purpose field must be at least 100 characters of real description — no "TBD",
+  no "see X", no placeholder. Describe what would break in your product if this capability
+  stopped working.
+
+status: active
+tier: team
+
+owner:
+  human: "@TODO-your-handle"
+
+# -------------------------------------------------------------------------
+# Contract — the stable interface other capabilities depend on
+# -------------------------------------------------------------------------
+
+contract:
+  inputs:
+    - name: example_request
+      shape: "TODO — type name or schema reference"
+      description: "What this capability accepts."
+  outputs:
+    - name: example_result
+      shape: "TODO — type name or schema reference"
+      description: "What this capability returns."
+  invariants:
+    - "TODO — a property that must hold across all executions of this capability."
+
+# -------------------------------------------------------------------------
+# Acceptance cases — what tests must satisfy
+# -------------------------------------------------------------------------
+
+cases:
+  - id: positive-happy-path
+    kind: positive
+    priority: critical
+    description: "TODO — the canonical happy-path test."
+    test_id: "tests/contract/test_example_feature.py::test_happy_path"
+  - id: rejects-invalid-input
+    kind: negative
+    priority: high
+    description: "TODO — invalid input is rejected, not crashed on."
+    test_id: "tests/contract/test_example_feature.py::test_rejects_invalid_input"
+
+# -------------------------------------------------------------------------
+# Definition of done
+# -------------------------------------------------------------------------
+
+definition_of_done:
+  conditions:
+    - id: all-cases-pass
+      statement: "Every case above has a passing test."
+      verifiable_by: contract_test
+      evidence_ref: "tests/contract/test_example_feature.py"
+    - id: schema-valid
+      statement: "This spec.yaml validates against capability_spec.schema.yaml."
+      verifiable_by: schema_validation
+
+# -------------------------------------------------------------------------
+# Non-functional requirements (per-capability)
+# -------------------------------------------------------------------------
+
+non_functional:
+  performance: "TODO — e.g. p95 < 200ms"
+  security: "TODO — e.g. inputs sanitized, no eval"
+
+# -------------------------------------------------------------------------
+# Bounded authority for tasks within this capability
+# -------------------------------------------------------------------------
+
+tasks_must:
+  use_patterns:
+    - "TODO — design patterns required for tasks in this capability area"
+  avoid_dependencies:
+    - "TODO — libraries tasks must not introduce"
+
+forbidden:
+  - "TODO — at least one behavior NO task within this capability does, ever."
+
+related_capabilities: []
+
+# -------------------------------------------------------------------------
+# Narrative — free-form design rationale
+# -------------------------------------------------------------------------
+
+notes:
+  design_rationale: |
+    TODO — Why this capability is shaped this way. What alternatives were considered and
+    rejected. Architectural choices that future readers will need to understand.
+  open_questions: |
+    TODO — Things still to be resolved. Pin them here so they don't get lost in chat history.

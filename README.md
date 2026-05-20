@@ -10,6 +10,26 @@ sdd init
 
 That's it. 60 seconds from install to a working `.governance/` framework in your repo.
 
+### Or install as a Claude Code plugin
+
+`sdd-plus-plus` ships as a Claude Code plugin too — bundling the `sdd serve` MCP server, the **Bob** (scaffolder) and **Dana** (reviewer) agents, and slash commands for the full CLI.
+
+```text
+/plugin marketplace add built-it-here/sdd-plus-plus
+/plugin install sdd-plus-plus@sdd-plus-plus-marketplace
+```
+
+After install you get:
+
+- **`@bob-scaffolder`** — drafts capability specs, acceptance YAML, and task cards in one pass
+- **`@dana-reviewer`** — peer-reviews task cards against the contracts, ingests findings, updates status
+- **`/sdd-init`**, **`/sdd-validate`**, **`/sdd-doctor`**, **`/sdd-finding-add`**, **`/sdd-review`** — slash commands wrapping the CLI
+- An MCP server (`sdd-governance`) that exposes `list_capabilities`, `get_task`, `get_acceptance`, `search_findings`, `validate`, and more as native Claude tools, scoped to the current repo via `${CLAUDE_PROJECT_DIR}`
+
+The plugin requires `pip install 'sdd-plus-plus[serve]'` so the `sdd` binary is on `$PATH` for the MCP server.
+
+**Optional but powerful: a shared findings wiki.** Point `wiki.repo` in your config at a git repo and findings stop being trapped per-codebase — they become an org-wide knowledge layer that Bob reads before scaffolding and Dana publishes to after review. See [`CONFIG.md`](./CONFIG.md) and [`examples/sdd-config.example.yaml`](./examples/sdd-config.example.yaml).
+
 ---
 
 ## What you get from `sdd init`

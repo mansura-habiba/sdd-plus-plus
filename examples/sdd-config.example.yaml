@@ -1,0 +1,86 @@
+# sdd-plus-plus configuration example
+#
+# Copy this to one of:
+#   ~/.config/sdd/config.yaml     — global (applies to every repo)
+#   .governance/config.yaml       — project (overrides global for this repo)
+#
+# Anything not set falls back to the schema default. The schema lives at
+# .governance/sdd-config.schema.yaml. Validate with `sdd config validate`.
+
+schema_version: "0.1"
+
+# ---------- Tier ----------
+# `solo` skips team-only artifacts. `team` enables capability ownership,
+# multi-reviewer rules, and the team-tier CI workflow.
+tier: team
+
+# ---------- Governance directory ----------
+# Relative to the consuming repo's root. Change only if you have a strong
+# reason — most tooling assumes `.governance/`.
+governance_dir: ".governance"
+
+# ---------- AI-resistance defaults ----------
+# The framework's job is to make AI-generated work *visible*, not block it.
+# Pick the policy that matches how much you trust your assistants right now.
+ai_resistance:
+  # forbidden | disclosed | permitted
+  default_assistance_policy: disclosed
+  require_case_id_on_assertions: true
+
+# ---------- Wiki (shared findings repo) ----------
+# The LLM-wiki layer. When set, sdd treats this remote git repo as the
+# canonical home for findings — pulled before reads, pushed to after
+# reviewer-approved ingestion.
+#
+# Local findings under `.governance/findings/` remain the working copy.
+# Sync to the wiki is explicit unless `sync_mode: auto-sync`.
+wiki:
+  repo: https://github.com/mansura-habiba/altaria-llm-wiki
+  branch: main
+  path_prefix: findings
+  local_cache: ~/.cache/sdd/wiki
+
+  # manual | auto-pull | auto-sync
+  # auto-pull is the safe default: every read pulls latest, but pushes
+  # remain explicit so you don't leak half-baked findings.
+  sync_mode: auto-pull
+
+  # forbidden | reviewer-only | any-author
+  # reviewer-only matches the framework's intent: Dana (or a human
+  # reviewer) is the gate between raw findings and the shared wiki.
+  write_policy: reviewer-only
+
+  auth:
+    # ssh | https-token | none
+    method: https-token
+
+    # Token is read from this env var at runtime. The token value itself
+    # is never stored in this file.
+    token_env_var: SDD_WIKI_TOKEN
+
+    # Optional — override the SSH key path if you have a dedicated key
+    # for wiki access. Comment out to let git resolve normally.
+    # ssh_key_path: ~/.ssh/sdd_wiki_id_ed25519
+
+# ---------- MCP server ----------
+mcp:
+  # stdio is correct for Claude Code, Cursor, Claude Desktop, Aider.
+  # Switch to http/sse only for remote/team-shared MCP setups.
+  transport: stdio
+  http_host: "127.0.0.1"
+  http_port: 8765
+  expose_validation: true
+
+# ---------- Validation ----------
+validation:
+  # In CI for repos that have cleaned up legacy artifacts, turn this on.
+  strict_mode: false
+
+  # Don't break the build on a freshly scaffolded acceptance YAML.
+  treat_tbd_linked_test_as_error: false
+
+# ---------- Findings ----------
+findings:
+  # A finding without consequences is a comment. Keep this on.
+  require_consequences: true
+  auto_link_capability: true

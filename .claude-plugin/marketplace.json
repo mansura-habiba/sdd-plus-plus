@@ -1,0 +1,28 @@
+{
+  "name": "sdd-plus-plus-marketplace",
+  "owner": {
+    "name": "built-it-here",
+    "url": "https://github.com/built-it-here"
+  },
+  "metadata": {
+    "description": "Marketplace for sdd-plus-plus and related Spec-Driven Development plugins.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "sdd-plus-plus",
+      "source": ".",
+      "description": "Spec-Driven Development that ships. Scaffolds .governance/, validates contracts, exposes governance via MCP, and ships Bob (scaffolder) and Dana (reviewer) agents.",
+      "version": "0.3.0",
+      "homepage": "https://github.com/built-it-here/sdd-plus-plus",
+      "license": "Apache-2.0",
+      "keywords": [
+        "spec-driven-development",
+        "governance",
+        "ai-coding",
+        "mcp"
+      ],
+      "category": "development"
+    }
+  ]
+}

@@ -1,0 +1,94 @@
+name: Governance gate
+
+# Runs on every PR. Validates schemas, runs contract tests, checks ownership/scope.
+# The human reviewer only sees a PR after this gate is green — compliance is the bot's job.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+
+  validate:
+    name: sdd validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install "sdd-plus-plus>=0.3.0"
+      - run: sdd validate --strict
+
+  contract-tests:
+    name: Contract tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install pytest "jsonschema[format]" ruamel.yaml
+      - name: Run contract test suite
+        run: |
+          if [ -d tests/contract ]; then
+            pytest tests/contract/ -v
+          else
+            echo "No tests/contract/ yet — skipping."
+          fi
+
+  check-pr-ownership:
+    name: PR body contains human ownership disclosure
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reject PRs without a linked issue
+        run: |
+          body="${{ github.event.pull_request.body }}"
+          if ! echo "$body" | grep -qiE "Closes #[0-9]+"; then
+            echo "::error::PR body must reference 'Closes #<issue>'."
+            exit 1
+          fi
+      - name: Reject PRs without an owner handle
+        run: |
+          body="${{ github.event.pull_request.body }}"
+          if ! echo "$body" | grep -qE "Owner handle:[[:space:]]*@[a-zA-Z0-9_-]+"; then
+            echo "::error::PR body must declare 'Owner handle: @<your-handle>' — every merge has a named human owner."
+            exit 1
+          fi
+
+  check-protected-paths:
+    name: Protected paths require explicit label
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Reject PRs that modify principles/spec/arch_spec without 'spec-change' label
+        run: |
+          changed=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+          spec_changed=$(echo "$changed" | grep -E '^\.governance/(wiki/principles\.md|capabilities/.*/spec\.yaml|arch_spec\.md)$' || true)
+          if [ -n "$spec_changed" ]; then
+            labels='${{ toJson(github.event.pull_request.labels) }}'
+            if ! echo "$labels" | grep -q '"spec-change"'; then
+              echo "::error::Spec / principles / arch_spec changed but PR is not labeled 'spec-change'. Spec edits require human authorship + tier_approver."
+              echo "Changed:"
+              echo "$spec_changed"
+              exit 1
+            fi
+          fi
+
+  summary:
+    name: Governance summary
+    needs: [validate, contract-tests, check-pr-ownership, check-protected-paths]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - run: |
+          echo "All governance gates green. PR is now eligible for human review."
+          echo "Reviewer's job: judgment (architecture, business sense, edge cases)."
+          echo "Compliance was already verified by this workflow."

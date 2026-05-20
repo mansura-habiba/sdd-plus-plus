@@ -1,0 +1,12 @@
+  - ts: '2026-05-20T16:35:48Z'
+    kind: init
+    message: Bootstrapped framework v0.3 at tier 'team'.
+    actor: '@stoic-exciting-sagan'
+  - ts: '2026-05-20T16:35:57Z'
+    kind: doctor
+    message: 6/9 milestones passed.
+    actor: '@stoic-exciting-sagan'
+  - ts: '2026-05-20T16:35:57Z'
+    kind: validate
+    message: 3 passed, 0 failed, 0 cross-ref issues.
+    actor: '@stoic-exciting-sagan'
