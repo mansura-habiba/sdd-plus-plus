@@ -85,12 +85,188 @@ AI coding sessions are increasingly expensive in inference cost. The dominant co
 Without an explicit mechanism for *intentional compaction* — maintaining a running summary outside the context window so the window stays focused on the immediate task — long-running sessions degrade in predictable ways.
 
 ---
+## 3. Research Position
 
-## 3. The proposed method: SDD++
+Seven claims that this research will deepen, refine, and defend — not discover. They are the priors from which the program operates. If any of them turn out to be wrong, the program restructures around the correction.
+
+### 3.1 Generation is no longer the bottleneck. Verification is.
+Process frameworks that optimize for generation throughput are solving yesterday's problem. The discipline of the next decade is verification economics: what to verify, by whom, with what evidence, at what cost.
+
+### 3.2 The unit of software work is the human-agent ensemble, not the human team.
+One human, an unknown number of agents, a fluid composition. The cognitive constraints that shaped Agile — human working memory, human pace, human coordination cost — do not apply. New constraints apply. They have not been named.
+
+### 3.3 Specs are durable; code is exhaust.
+The artifact that persists across regenerations is the spec, not the code. Process discipline should attach to the spec. The trajectory of the spec, over a system's life, is the system's intellectual lineage.
+
+### 3.4 Handover is a contract, not a document.
+Until handover is treated as a contract with parties, terms, acceptance, and remedies, senior engineers will remain the verification bottleneck regardless of how good the agents become.
+
+### 3.5 Software has decades of operational wisdom available from other safety-critical industries. It has imported almost none of it.
+Aviation, ICUs, nuclear control rooms, drug discovery, chain-of-custody, naval operations, long-baseline science — all have solved problems software is currently getting wrong. The translation work is not optional; it is the central methodological move of this program.
+
+### 3.6 Mortality is a design principle, not a failure mode.
+Systems that do not know how to die accumulate fatal complexity. The default state of software should be "scheduled for death unless renewed," not "alive forever unless deleted."
+
+### 3.7 Process discipline is a substitute for trust at scale.
+Trust does not scale. Protocols do. The right protocols make trust portable across teams, vendors, time, and the human-agent boundary. The work is to design protocols rigorous enough that adopting them is cheaper than maintaining bilateral trust relationships.
+
+## 4. Research pillars
+
+Ten pillars. Each pillar has a question, a set of sub-questions, a method, and a connection to primitives already named in the repo.
+
+### 4.1 Verification Economics
+
+**Question:** When generation is nearly free and verification is the bottleneck, what is the right economics of verification — how much human attention should be spent verifying what, and how is that attention allocated?
+
+**Sub-questions:**
+- How is verification capacity measured? What is the right unit?
+- What is the calibration curve for AI-generated code under different verification regimes?
+- What is the right ratio of human-time to automated-evidence in verification budgets?
+- What does "good enough" verification look like for each reversibility class of change?
+
+**Method:** Instrument real teams. Observe where senior attention goes. Build the Attention Budget primitive. Measure outcomes against baselines.
+
+**Connected primitives:** Attention Budget, Spec-Compile-Verify gates, structured return states.
+
+
+
+### 4.2 Handover Protocols
+
+**Question:** What structural mechanisms move work between agents and humans (and between agents and agents) without dropping it on the floor?
+
+**Sub-questions:**
+- What is the minimum viable handover contract?
+- How does differential routing work at scale — who decides which receiver is right?
+- What does the agent-to-agent handover protocol look like? (Open question from origin conversation.)
+- How is handover quality itself graded over time?
+- What are the failure modes of the protocol under organizational pressure (e.g., when the senior reviewer accepts everything because they don't have time to push back)?
+
+**Method:** Adapt SBAR (nursing), ATC sector handover, aviation transfer-of-control, nuclear shift turnover. Draft reference protocol. Build reference implementation with real agents. Pilot with one team for at least three months.
+
+**Connected primitives:** Confidence shape, bidirectional acknowledgement, dissent log, differential routing, receiver-customized brief, the clock, structured return states.
+
+
+
+### 4.3 Spec Trajectories
+
+**Question:** How do specs evolve over a system's life, and how should that evolution be instrumented?
+
+**Sub-questions:**
+- What is the right artifact for the Conjecture with horizons?
+- How is spec drift recorded, versioned, and read by newcomers?
+- What does Phase IV (post-deployment discovery) look like in software, and how is it budgeted?
+- How are reversibility classes assigned, and how does that assignment hold up over time?
+
+**Method:** Borrow from drug discovery's Phase I-IV structure. Trace spec evolution in real long-lived systems (one open-source, one proprietary if access available). Map decisions to their reversibility class and observation horizon.
+
+**Connected primitives:** Conjecture with horizons, discovery budget, spec drift instrumentation, reversibility classes, observation horizons, deliberate wrong-version building.
+
+
+
+### 4.4 Mortality and Lifecycle
+
+**Question:** What does it look like when software is designed to die well, and how does that change the organization around it?
+
+**Sub-questions:**
+- How does the Bill of Mortality work in practice, and what tooling does it require?
+- What does the Renewal Court look like in a real team — who serves, how often, what evidence is admissible?
+- What are the failure modes of forced expiration (false positives, defensive renewal, gaming the court)?
+- How does Apoptosis work mechanically — what observable degradation pattern is acceptable to callers?
+
+**Method:** Pilot in a small system with consenting stewards. Study graceful deprecation in adjacent domains (library deprecation paths, FDA recall processes, naval ship decommissioning).
+
+**Connected primitives:** Mortality-First Lifecycle (Genesis, Quickening, Renewal Court, Apoptosis, Coroner's Inquest), Bill of Mortality.
+
+
+
+### 4.5 Roles, Accountability, and Routing
+
+**Question:** What roles emerge in a human-agent ensemble, and how does accountability redistribute when the senior engineer is no longer the universal reviewer?
+
+**Sub-questions:**
+- What are the actual new roles (Cartographer, Coroner, Hospice Engineer, Genealogist, Midwife) — what do they do day to day?
+- How are these roles staffed — promoted into, hired for, rotated?
+- What is the differential routing logic that replaces "human in the loop"?
+- How does the system stay accountable when no single named human is "the owner"?
+
+**Method:** Identify roles by negation — what dissolves when senior engineer is no longer the funnel, what emerges in the vacuum. Interview practitioners. Pilot role definitions in at least one organization.
+
+**Connected primitives:** Midwife, Cartographer, Renewal Counsel/Opposing Counsel, Coroner, Hospice Engineer, Genealogist, differential routing.
+
+
+
+### 4.6 Process Substrates
+
+**Question:** What replaces Agile's ceremonies in an environment where the bottleneck has moved?
+
+**Sub-questions:**
+- How does the Wager Loop work over a full quarter — what calibration data does it produce?
+- What does the Logbook look like in real practice — append-only, structured, how do humans and agents both write to it?
+- How is Attention Budget measured, tracked, and respected?
+- What ceremonies, if any, do humans still need for social cohesion, separately from project management?
+
+**Method:** Build templates. Run pilots. Compare outcomes against Agile baselines. Measure team satisfaction independently from delivery metrics.
+
+**Connected primitives:** Spec-Compile-Verify, Wager Loop, Attention Budget, Logbook.
+
+
+
+### 4.7 Provenance and Chain of Custody
+
+**Question:** Given that AI agents are writing significant portions of code, what provenance machinery does the lifecycle require?
+
+**Sub-questions:**
+- How is "who/what wrote this code" recorded — at what granularity?
+- What does signed handover look like — cryptographic, organizational, both?
+- How does chain of custody port from physical industries (evidence handling, chemistry, pharmaceuticals) to software artifacts?
+- What is the right format for a birth certificate — minimum viable, extensible?
+
+**Method:** Study NIST SBOM extensions and SLSA. Study chain-of-custody from physical industries. Draft provenance schemas. Build reference implementation.
+
+**Connected primitives:** Birth certificate, Bill of Mortality, Genealogist role.
+
+
+
+### 4.8 Failure Investigation
+
+**Question:** What does a software incident investigation look like when it is structured like a death investigation rather than a postmortem?
+
+**Sub-questions:**
+- What is the right separation between fact-finding (Coroner) and policy-making (Renewal Court)?
+- How is blameless investigation instrumented so it survives organizational pressure to assign fault?
+- What does the report from a Coroner's Inquest look like, and who reads it?
+- How does this differ from existing SRE postmortem practice — what gaps does it close?
+
+**Method:** Study NTSB methodology and FAA incident reporting culture. Compare against current SRE postmortem practice. Pilot one investigation under the new structure.
+
+**Connected primitives:** Coroner's Inquest, Coroner role, blameless framing.
+
+
+
+### 4.9 Cross-Industry Translation
+
+**Question:** What other industries have already solved problems software is currently getting wrong, and how do you port their practices honestly without cargo-culting?
+
+**Sub-questions:**
+- Aviation: incident reporting, CRM (Crew Resource Management), sterile cockpit rules, transfer of control.
+- ICU and emergency medicine: SBAR handoff, nurse-physician communication, the "what I'm worried about" channel.
+- Nuclear: shift turnover, safety culture, the difference between event reports and condition reports.
+- Drug discovery: phase gates, post-marketing surveillance, the role of FDA Phase IV.
+- Chain-of-custody: evidence integrity, witnessed transfer, the legal standards for chain breaks.
+- Naval and submarine operations: watch turnover, standing orders, the standing-orders-vs-current-situation distinction.
+- Long-baseline scientific experiments: hypothesis evolution, pre-registration, planned re-analysis.
+
+**Method:** Embedded research where possible — visits, interviews with practitioners. Read primary sources (NTSB reports, NRC bulletins, FDA guidances, IOM patient safety reports). Cite specific practices, not generalized lessons.
+
+**Connected primitives:** Cross-cuts every pillar. This is the central methodological move.
+
+---
+
+## 5. The proposed method: SDD++
 
 SDD++ is a software engineering method, an artifact layout, a set of schema-enforced rules, and a Python tool. The method is opinionated; the tool is designed to be the smallest possible vehicle for the opinions. We describe the method in three layers: principles, architecture, and workflow.
 
-### 3.1 Five principles
+### 5.1 Five principles
 
 The method rests on five principles. Each is enforced mechanically wherever possible:
 
@@ -104,7 +280,7 @@ The method rests on five principles. Each is enforced mechanically wherever poss
 
 5. **AI is a collaborator, not an author.** AI writes code, drafts plans, surfaces findings. Humans *own* specifications (`spec.md`, `principles.md`, `arch_spec.md`), *own* plans (via explicit acceptance with `sdd plan accept --by @<handle>`), and *own* every merged line. AI is *required to challenge weak premises before complying* — sycophancy is treated as a failure mode rather than a feature.
 
-### 3.2 Architecture
+### 5.2 Architecture
 
 The framework is laid out under a single top-level directory:
 
@@ -127,7 +303,7 @@ AGENTS.md                 # at repo root — copy of instructions.md for tool au
 
 Schemas — the JSON Schema definitions that validate every frontmatter block — are *not* shipped to adopters. They live inside the `sdd-plus-plus` Python package and are loaded by the tool. Adopters get schema upgrades by upgrading the tool, eliminating the copy-paste-into-every-repo problem that has plagued previous frameworks.
 
-### 3.3 Workflow
+### 5.3 Workflow
 
 A representative workflow for a single task:
 
@@ -149,7 +325,7 @@ A representative workflow for a single task:
 
 9. **Merge.** On merge, the plan's status may advance to `executed`. After execution, the reviewer optionally records `outcome` (success / partial / failure) on the plan. Over time, this builds a calibration dataset against the AI's stated `confidence`.
 
-### 3.4 Continuous mechanisms
+### 5.4 Continuous mechanisms
 
 Two mechanisms run continuously across the workflow:
 
@@ -159,17 +335,17 @@ Two mechanisms run continuously across the workflow:
 
 ---
 
-## 4. Why this method is better
+## 6. Why this method is better
 
 We argue that SDD++ improves on three existing classes of approach: no-framework (ad-hoc AI use), first-generation SDD tools, and unmodified Test-Driven Development.
 
-### 4.1 Versus no-framework
+### 6.1 Versus no-framework
 
 Most teams using AI assistants today operate without explicit governance. The benefits — short setup, no overhead, full speed — are real and important early. The costs surface after a few months: AI-generated code that no one fully owns, conventions that drift, tests that don't catch what they should, design decisions that are unrecoverable from chat logs.
 
 SDD++ accepts a higher per-task overhead (drafting a plan, populating a challenge block, having a human accept the plan) in exchange for mechanical enforcement of properties that no-framework cannot provide: every line of code traces to an accepted plan, every plan to a specification, every specification to a principle. The overhead is the price of long-run maintainability.
 
-### 4.2 Versus first-generation SDD tools (Kiro, spec-kit, Tessl)
+### 6.2 Versus first-generation SDD tools (Kiro, spec-kit, Tessl)
 
 We have analyzed the three named tools elsewhere and found, in each case, design choices that compound at scale. Spec-kit produces 8 files for a 3-point story; the friction-to-value ratio is wrong. Kiro turns small bugs into elaborate 4-user-story requirements documents. Tessl experiments with spec-as-source, which inherits both the inflexibility of model-driven development and the non-determinism of large language models.
 
@@ -183,7 +359,7 @@ SDD++ differs in four ways:
 
 4. **Multi-vendor by design.** AGENTS.md is the de-facto cross-vendor AI rules format. The MCP server is implementation-agnostic. Nothing in SDD++ requires a particular AI assistant or IDE.
 
-### 4.3 Versus unmodified TDD
+### 6.3 Versus unmodified TDD
 
 Test-Driven Development is, in spirit, a spec-driven method: the test *is* the specification. The methodology is sound, but it pre-dates AI-generated code. In an AI-assisted workflow, the AI that generates the production code also generates the tests, and the two converge on internal coherence without external validation. The discipline TDD relied on — the human writes the test that captures intent, then writes the code that satisfies it — is the discipline AI breaks by default.
 
@@ -191,9 +367,9 @@ SDD++ preserves TDD's most valuable property (the test is executable proof of be
 
 ---
 
-## 5. Pros and cons
+## 7. Pros and cons
 
-### 5.1 What SDD++ does well
+### 7.1 What SDD++ does well
 
 - **AI-resistance by design.** The schema-enforced human-authorship boundary survives even when the AI is told to bypass it. Adversarial prompts that would compromise prose specifications fail schema validation.
 - **Mechanical enforcement.** Five gates run in CI (schema validation, contract tests, ownership disclosure, protected-paths check, cross-reference checks). The human reviewer never adjudicates compliance — only judgment.
@@ -202,7 +378,7 @@ SDD++ preserves TDD's most valuable property (the test is executable proof of be
 - **Multi-team operability.** A single tool serves many repositories. Engineering leaders with portfolio responsibility can require SDD++ across teams without per-team customization.
 - **Token economy.** `progress.md` provides intentional compaction; MCP tools provide selective context loading. AI sessions stay focused.
 
-### 5.2 What SDD++ does poorly today
+### 7.2 What SDD++ does poorly today
 
 - **Mutation testing is not yet integrated.** This is the single highest-leverage missing piece. Without mutation scores, the contract-test layer can still be gamed by AI-generated tests that please code rather than spec. Targeted for v0.4.
 - **No calibration tracking yet.** The schema supports `confidence` and `outcome` fields, but the framework does not yet aggregate per-tool calibration scores. Until it does, the calibration story is aspirational. Targeted for v0.4.
@@ -211,7 +387,7 @@ SDD++ preserves TDD's most valuable property (the test is executable proof of be
 - **Human discipline is still required.** No framework can prevent a team from gaming its rules — populating the challenge block with boilerplate, accepting plans without reading them, signing ownership statements without understanding the code. The framework makes gaming visible at audit time, but does not prevent it in the moment.
 - **The "spec rot" problem is mitigated but not solved.** Schema validation prevents specs from becoming syntactically wrong over time, but cannot prevent them from becoming *stale* — describing a behavior the code no longer implements. The contract test layer catches some of this; mutation testing (v0.4) will catch more; perfect prevention is unsolved.
 
-### 5.3 Open questions
+### 7.3 Open questions
 
 - **Per-team calibration.** How does the framework balance graduated trust against the operational reality of new AI tools being adopted faster than calibration can be measured?
 - **Plan granularity.** Is one plan per task too coarse for long-running features? Should plans be hierarchical?
@@ -219,11 +395,11 @@ SDD++ preserves TDD's most valuable property (the test is executable proof of be
 
 ---
 
-## 6. Future work
+## 8. Future work
 
 The framework as described is v0.3. Several extensions are in design.
 
-### 6.1 v0.4: calibration and crosscheck
+### 8.1 v0.4: calibration and crosscheck
 
 **Per-tool calibration tracking.** The `signals.json` time-series store (planned) will aggregate per-plan confidence claims against recorded outcomes. AI tools whose 90% predictions hit 60% in practice will have their autonomy downgraded mechanically. This is the operationalization of the calibration story from §3.
 
@@ -231,7 +407,7 @@ The framework as described is v0.3. Several extensions are in design.
 
 **Mutation testing in CI.** `mutmut` (Python), `Stryker` (JavaScript), `pitest` (Java) wired into the governance workflow with per-capability mutation score thresholds set in `spec.md` frontmatter. Tests that survive mutation cannot be gaming the spec; mutation score becomes the first-class quality metric alongside coverage.
 
-### 6.2 v0.5 and beyond: aspects of "crew resource management"
+### 8.2 v0.5 and beyond: aspects of "crew resource management"
 
 The longer-horizon vision draws from aviation safety culture. We outline four directions without committing to delivery dates.
 
@@ -243,18 +419,9 @@ The longer-horizon vision draws from aviation safety culture. We outline four di
 
 **Recurrency requirements.** AI tools operating in a codebase for 12+ months must "re-check out" on critical capabilities periodically. A failing recurrency check downgrades autonomy until a human re-trains the tool. This is the discipline that prevents slow drift where an AI trusted in February is silently wrong by November.
 
-### 6.3 Research questions worth answering
-
-- What is the empirical relationship between per-team SDD++ adoption depth and incident rate? We do not know; field data is needed.
-- Does the challenge-block requirement measurably reduce AI sycophancy, or do AI tools learn to produce template challenge blocks that satisfy the schema without surfacing real concerns?
-- Is the ownership-disclosure mechanism behaviorally effective at making engineers actually read AI-generated code, or does it become a checkbox?
-- What is the optimal granularity for capability specs in a 100k-line codebase? 200k? 1M?
-
-We invite teams adopting SDD++ to publish their data. The honest test of any methodology is what happens to mutation score, incident rate, and developer satisfaction over twelve months in a real codebase.
-
 ---
 
-## 7. Conclusion
+## 9. Conclusion
 
 We have argued that AI-assisted software engineering is at a phase shift analogous to aviation in the mid-1950s: the technology works, sometimes the planes crash, and the field has not yet developed the institutional discipline to make the human-machine system safer than either alone. SDD++ is our attempt at the first round of that discipline: schemas where prose used to be, mechanical enforcement where social norms used to be, AI-resistance where AI-friendliness used to be the implicit goal.
 
