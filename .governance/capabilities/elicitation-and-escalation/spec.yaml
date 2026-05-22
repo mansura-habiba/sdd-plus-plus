@@ -1,0 +1,323 @@
+# yaml-language-server: $schema=../../../src/sdd/_schemas/capability_spec.schema.yaml
+#
+# Capability spec — elicitation and escalation.
+# AI is forbidden from editing this file. Humans author and maintain it.
+
+id: elicitation-and-escalation
+name: "Elicitation and Escalation"
+purpose: |
+  Make AI uncertainty and handoff-to-human into refusable, executable artifacts. The
+  framework already requires challenge-before-comply (instructions.md §1) and confidence
+  calibration (§12), and it lists uncertainty triggers (§9). This capability closes the
+  remaining gaps: no formal blocked-plan state, no per-capability trigger taxonomy, no
+  dedicated elicitation agent, no validation rule against unreferenced escalations.
+  Without these, the AI's "I'm uncertain" remains a chat message that evaporates;
+  with them, it becomes a tracked artifact that a human owns and the framework audits.
+
+status: roadmap
+tier: team
+
+owner:
+  human: "@mansura-habiba"
+
+# -------------------------------------------------------------------------
+# Contract — the stable interface this capability exposes
+# -------------------------------------------------------------------------
+
+contract:
+
+  inputs:
+    - name: capability_id
+      shape: "string (kebab-case)"
+      description: "The capability whose triggers are being evaluated, or under which a plan is being blocked."
+    - name: trigger_context
+      shape: "TriggerContext (plan or task being worked on, ambiguity or risk observed)"
+      description: "What the AI is currently doing and what it observed that may demand elicitation or escalation."
+
+  outputs:
+    - name: trigger_evaluation
+      shape: "TriggerEvaluation (matched_triggers, recommended_action: proceed | elicit | escalate, reason)"
+      description: "Per-trigger evaluation against the capability's declared triggers, plus the recommended action."
+    - name: block_record
+      shape: "BlockRecord (plan_id, what_i_was_doing, what_made_me_stop, what_i_think, what_i_need_from_you, references)"
+      description: "Structured record written into the plan when the AI escalates. Must reference at least one case_id, forbidden item, or finding ID."
+    - name: elicitation_questions
+      shape: "ElicitationQuestion[] (question, cited_source, default_action_if_unanswered, options)"
+      description: "Structured questions produced by Eve. Each cites the spec or finding that produced the confusion."
+
+  invariants:
+    - "Every block_record references at least one case_id, forbidden item, or finding ID. Unanchored escalations fail validation."
+    - "A plan whose status is `blocked` has all four block_reason fields populated. Empty fields fail validation."
+    - "A plan in `blocked` status cannot transition to `executed`. Only `draft` → `accepted` → `executed`; blocked plans must move back to `draft` first."
+    - "Elicitation questions count is bounded — at most three questions per turn. Beyond three, the marginal value collapses (per TREC CAsT literature)."
+    - "Every elicitation question includes a stated default action if unanswered."
+
+# -------------------------------------------------------------------------
+# Acceptance cases — what tests must satisfy
+# -------------------------------------------------------------------------
+
+cases:
+
+  - id: blocked-status-requires-structured-reason
+    kind: invariant
+    priority: critical
+    description: |
+      A plan with status: blocked and an empty or partial block_reason fails schema
+      validation. All four SBAR-shaped fields (what_i_was_doing, what_made_me_stop,
+      what_i_think, what_i_need_from_you) must be populated.
+    test_id: "tests/contract/test_elicitation.py::test_blocked_requires_structured_reason"
+
+  - id: blocked-status-requires-anchored-reference
+    kind: invariant
+    priority: critical
+    description: |
+      A block_record whose references field is empty, or whose references point to
+      non-existent case_ids / forbidden items / finding IDs, fails validation. This
+      enforces "anchored escalations only" — no theater.
+    test_id: "tests/contract/test_elicitation.py::test_blocked_requires_anchored_reference"
+
+  - id: blocked-cannot-skip-to-executed
+    kind: negative
+    priority: critical
+    description: |
+      A plan in `blocked` status cannot be advanced to `executed` directly. It must
+      first return to `draft`, get human-accepted, and then proceed. The transition
+      blocked → executed is rejected by sdd validate.
+    test_id: "tests/contract/test_elicitation.py::test_blocked_cannot_skip_to_executed"
+
+  - id: capability-triggers-fire-when-conditions-match
+    kind: positive
+    priority: critical
+    description: |
+      Given a capability spec with elicitation_triggers declaring "currency-mismatch
+      observed" and an input plan describing a currency-mismatch condition, the
+      trigger evaluation returns recommended_action: elicit and matched_triggers
+      contains the currency-mismatch trigger by name.
+    test_id: "tests/contract/test_elicitation.py::test_capability_triggers_fire_on_match"
+
+  - id: escalation-triggers-supersede-elicitation
+    kind: invariant
+    priority: high
+    description: |
+      When both an elicitation_trigger and an escalation_trigger match the same
+      context, the recommended_action is `escalate`, not `elicit`. Escalation is
+      strictly stronger than elicitation.
+    test_id: "tests/contract/test_elicitation.py::test_escalation_supersedes_elicitation"
+
+  - id: elicitation-questions-bounded-and-cited
+    kind: invariant
+    priority: high
+    description: |
+      Eve produces at most three elicitation questions per turn. Each question
+      includes a non-empty cited_source field (referencing a case_id, capability
+      field, or finding ID) and a non-empty default_action_if_unanswered field.
+    test_id: "tests/contract/test_elicitation.py::test_elicitation_questions_bounded_and_cited"
+
+  - id: stale-block-flagged-by-doctor
+    kind: positive
+    priority: normal
+    description: |
+      A plan that has been in `blocked` status for more than N days (default 7) is
+      flagged by `sdd doctor` under a new "stale blocks" milestone. The flag
+      includes the plan_id and the elapsed time. This prevents permanent invisible
+      blocks.
+    test_id: "tests/contract/test_elicitation.py::test_stale_block_flagged_by_doctor"
+
+  - id: eve-refuses-to-scaffold
+    kind: negative
+    priority: high
+    description: |
+      Eve the Elicitor agent, when given a request to write code, scaffold a
+      capability, or produce any non-question artifact, returns a refusal that
+      hands off to the appropriate agent (bob-scaffolder or dana-reviewer) by
+      name. Eve produces only questions.
+    test_id: "tests/contract/test_elicitation.py::test_eve_refuses_to_scaffold"
+
+  - id: multi-perspective-ask-on-high-stakes
+    kind: positive
+    priority: high
+    description: |
+      For a trigger flagged with risk: high (e.g. touching security boundaries or
+      payment code), Eve produces at least one question framed two different ways
+      and explicitly checks whether the answers are consistent. Inconsistency in
+      reframed answers escalates from elicit to escalate.
+    test_id: "tests/contract/test_elicitation.py::test_multi_perspective_on_high_stakes"
+
+  - id: positive-handoff-language-required
+    kind: invariant
+    priority: high
+    description: |
+      Block records and Eve's escalation outputs use positive-handoff language
+      ("I have stopped. You have control. Here is what to resolve.") rather than
+      hedged language ("I'm not sure, you might want to look at this"). The schema
+      rejects block records whose what_i_need_from_you field begins with hedged
+      phrasings — a configurable but non-empty deny-list.
+    test_id: "tests/contract/test_elicitation.py::test_positive_handoff_language"
+
+# -------------------------------------------------------------------------
+# Definition of done
+# -------------------------------------------------------------------------
+
+definition_of_done:
+
+  conditions:
+
+    - id: all-cases-pass
+      statement: "Every case above has a passing contract test."
+      verifiable_by: contract_test
+      evidence_ref: "tests/contract/test_elicitation.py"
+
+    - id: schema-valid
+      statement: "This spec.yaml validates against capability_spec.schema.yaml."
+      verifiable_by: schema_validation
+
+    - id: schema-extensions-accepted
+      statement: |
+        The proposed extensions to capability_spec.schema.yaml (elicitation_triggers,
+        escalation_triggers blocks) and plan.schema.yaml (status: blocked enum value,
+        block_reason structured object) are landed in the framework's schemas and
+        validate the existing fixtures.
+      verifiable_by: schema_validation
+      evidence_ref: "src/sdd/_schemas/capability_spec.schema.yaml, src/sdd/_schemas/plan.schema.yaml"
+
+    - id: eve-agent-shipped
+      statement: |
+        Eve the Elicitor agent file (.bob/modes/eve-elicitor.md or equivalent path
+        under the plugin's agents directory) exists with proper plugin frontmatter,
+        is referenced from .claude-plugin/plugin.json, and refuses non-elicitation
+        requests per case eve-refuses-to-scaffold.
+      verifiable_by: manual_check
+      evidence_ref: ".bob/modes/eve-elicitor.md, .claude-plugin/plugin.json"
+
+    - id: instructions-md-amended
+      statement: |
+        instructions.md and .governance/wiki/principles.md gain a section formalizing
+        the multi-perspective ask requirement for high-stakes elicitations, and a
+        cross-reference to this capability's triggers.
+      verifiable_by: manual_check
+      evidence_ref: ".governance/instructions.md, .governance/wiki/principles.md"
+
+    - id: doctor-checks-stale-blocks
+      statement: |
+        sdd doctor surfaces plans in blocked status older than N days as a stale-block
+        milestone. The milestone is one of the doctor's standard checks.
+      verifiable_by: contract_test
+      evidence_ref: "tests/contract/test_elicitation.py::test_stale_block_flagged_by_doctor"
+
+# -------------------------------------------------------------------------
+# Non-functional requirements
+# -------------------------------------------------------------------------
+
+non_functional:
+
+  performance: |
+    Trigger evaluation runs in under 100ms per plan against a capability with up to
+    20 declared triggers. Eve's elicitation question generation is bounded by the
+    underlying model latency but produces at most three questions per turn so the
+    user is never asked to read a wall of text.
+
+  observability: |
+    Every transition into and out of blocked status is recorded in .governance/progress.md
+    via record_progress, with the plan_id, the block_reason summary, and the timestamp.
+    A team scanning progress can see exactly when and why blocks happened.
+
+  compatibility: |
+    Existing plans without elicitation_triggers or escalation_triggers blocks continue
+    to validate unchanged. The new fields are optional additions to the schema. No
+    existing capability is forced to declare triggers to keep working.
+
+# -------------------------------------------------------------------------
+# Bounded authority for tasks within this capability
+# -------------------------------------------------------------------------
+
+tasks_must:
+
+  use_patterns:
+    - "Extend existing schemas; do not duplicate. Add fields to capability_spec.schema.yaml and plan.schema.yaml rather than creating parallel files."
+    - "Block records follow SBAR shape (what_i_was_doing, what_made_me_stop, what_i_think, what_i_need_from_you). No alternative shape is permitted."
+    - "Elicitation questions cite their source field (case_id, capability spec section, or finding ID). Uncited questions fail validation."
+    - "Positive-handoff language in all escalation output. No hedged phrasings."
+
+  avoid_dependencies:
+    - "Do not introduce an LLM-as-judge dependency into the trigger evaluation path. Triggers are declarative pattern matches, not model-based classification."
+    - "Do not import the question-quality literature's full clarifying-question generation pipelines. Eve uses spec-driven cited questions, not generative IR."
+
+forbidden:
+
+  - "Marking a plan accepted while it is in blocked status. Status transitions out of blocked must go through draft → accepted."
+  - "Producing an elicitation question without citing the spec field, case_id, or finding that produced the confusion."
+  - "Producing a block_record without references resolving to existing case_ids, forbidden items, or finding IDs."
+  - "Using hedged language in block records or escalation outputs. The escalation must be heard, not interpreted."
+  - "Letting Eve scaffold capabilities, write code, or produce any non-question artifact. Eve's output surface is strictly elicitation questions."
+  - "Auto-resolving a stale block by silent timeout. Stale blocks are flagged by doctor; resolution is human-authored."
+
+related_capabilities:
+  - mutation-testing
+
+# -------------------------------------------------------------------------
+# Narrative — design rationale and open questions
+# -------------------------------------------------------------------------
+
+notes:
+
+  design_rationale: |
+    Why this capability exists. The framework's existing rules (instructions.md §1, §9, §12)
+    are correct but advisory — they tell the AI to challenge, but the framework cannot
+    audit whether the challenge was real. The plan schema's `challenge` block is the
+    one mechanically-enforced piece, and it works. This capability extends that
+    discipline to the three places it doesn't yet cover: blocked plans, per-capability
+    triggers, and Eve's role separation.
+
+    Why extend the existing schemas instead of creating parallel ones. The framework's
+    discipline is that contracts are declared in one place and validated mechanically.
+    Adding parallel files for "elicitation triggers" would create two sources of truth
+    for capability-level rules. The capability_spec.schema.yaml is the right place.
+
+    Why a separate Eve agent rather than strengthening Bob. The cross-industry evidence
+    (aviation pilot-flying/monitoring split, clinical role separation) is unambiguous:
+    one role doing both diagnosis and treatment skips diagnostic completeness. The
+    same model trained on "produce a useful artifact" pulls toward producing; the
+    same model asked to "challenge first" produces a perfunctory challenge if it's
+    already drafting in its head. Separation is the safety mechanism.
+
+    Why SBAR shape for block_reason. Hospital systems that adopted SBAR saw measurable
+    reductions in handoff-related adverse events. The shape is enforceable, teachable,
+    and grading-able. A block_reason without one of the four fields is a hesitation,
+    not an escalation — the schema makes that visible.
+
+    Why anchored references are a hard requirement. The framework's existing discipline
+    against orphan acceptance assertions is the right pattern: every assertion has a
+    case_id, every case_id resolves. Extend that to escalations: every block has at
+    least one anchor (case_id, forbidden item, or finding ID), and every anchor resolves.
+    Unanchored escalations are theater.
+
+  open_questions: |
+    1. Should elicitation_triggers and escalation_triggers be flat lists of pattern
+       strings, or structured objects with risk levels and example contexts? Flat is
+       simpler; structured enables risk-aware behavior (high-risk triggers force
+       multi-perspective ask). Lean toward structured.
+
+    2. Should the stale-block N (days threshold) be per-capability, per-plan, or
+       global? Per-capability has the right granularity (a security capability might
+       want N=1; a docs capability N=14) but adds schema surface. Lean toward
+       global with per-capability override.
+
+    3. Does Eve need her own slash commands (/sdd-elicit, /sdd-block) or do existing
+       commands suffice with new flags? Lean toward extending existing — /sdd-review
+       already exists; a /sdd-elicit feels parallel-but-separate-from-review in a way
+       that could be either useful or confusing. Discuss with users before shipping.
+
+    4. The multi-perspective ask requires reframing the same question two ways and
+       checking consistency. This is straightforward when Eve invokes a model; it's
+       harder when Eve is reading a static plan. Open: should multi-perspective be
+       Eve-runtime-only, or should it also be enforceable on stored elicitation
+       artifacts? Probably runtime-only for v0.5.
+
+  related_findings_notes: |
+    No findings yet — this is a fresh capability. The research analysis at
+    .governance/capabilities/elicitation-and-escalation/research.md is the grounding
+    document. Specifically: the framing that AIs need an andon-cord equivalent
+    (Toyota stop-the-line) is novel-adjacent in the AI-tools literature but
+    well-established in other industries. That framing should become a finding
+    once this capability ships its first task, so future capabilities don't
+    relitigate the design.

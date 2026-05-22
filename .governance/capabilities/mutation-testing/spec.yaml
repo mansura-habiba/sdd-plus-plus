@@ -1,0 +1,280 @@
+# yaml-language-server: $schema=../../../src/sdd/_schemas/capability_spec.schema.yaml
+#
+# Capability spec — mutation testing.
+# AI is forbidden from editing this file. Humans author and maintain it.
+
+id: mutation-testing
+name: "Mutation Testing"
+purpose: |
+  Verify that tests bound to acceptance case_ids actually exercise the asserted behavior,
+  not just touch the lines of code that implement it. Line and branch coverage prove
+  execution; mutation testing proves the test would notice if the implementation drifted.
+  This capability closes the audit loop sdd-plus-plus opened: task → case_id → test →
+  assertion strength. Without it, a test can satisfy the framework's structural rules
+  (correct case_id, passes CI) while asserting nothing meaningful about the contract.
+
+status: roadmap
+tier: team
+
+owner:
+  human: "@mansura-habiba"
+
+# -------------------------------------------------------------------------
+# Contract — the stable interface this capability exposes to the rest of sdd
+# -------------------------------------------------------------------------
+
+contract:
+  inputs:
+    - name: capability_id
+      shape: "string (kebab-case, matches a folder under .governance/capabilities/)"
+      description: "The capability whose tests are being audited."
+    - name: scope
+      shape: "enum: changed-cases | whole-capability | diff"
+      description: |
+        changed-cases: mutate only lines covered by tests whose case_id changed in the diff.
+        whole-capability: mutate every line covered by tests for any case in the capability.
+        diff: mutate only changed lines in the working diff (Google-style).
+    - name: operator_set
+      shape: "enum: default | rigorous"
+      description: |
+        default: relational, conditional, negation, return-value replacement.
+        rigorous: adds statement-deletion and constant-replacement (more noise).
+
+  outputs:
+    - name: mutation_report
+      shape: "MutationReport (case_id, mutants_total, mutants_killed, mutants_equivalent, score, surviving_mutants_by_line)"
+      description: |
+        Per-case_id mutation score plus a list of surviving mutants with file:line.
+        Surviving mutants are the deliverable, not the score.
+    - name: regression_signal
+      shape: "enum: regressed | stable | improved"
+      description: "Whether the score moved against the baseline for this capability."
+
+  invariants:
+    - "A mutation score is only reported alongside the operator set that produced it. A bare score is not a valid report."
+    - "Equivalent mutants are excluded from the denominator. The framework never inflates the score by counting equivalents as kills."
+    - "Suppressed mutants (via `# sdd: mutation-equivalent`) are reported in the output; suppression is visible, not invisible."
+    - "Mutation testing never blocks a PR on an absolute threshold. It blocks only on regression against the capability's baseline."
+
+# -------------------------------------------------------------------------
+# Acceptance cases — what tests must satisfy
+# -------------------------------------------------------------------------
+
+cases:
+
+  - id: scores-a-case-with-strong-tests
+    kind: positive
+    priority: critical
+    description: |
+      Given a case_id whose bound test makes assertions covering the implementation's
+      branches, mutation testing returns score ≥ 0.75 using the default operator set.
+    test_id: "tests/contract/test_mutation_testing.py::test_scores_a_case_with_strong_tests"
+
+  - id: flags-a-case-with-weak-tests
+    kind: positive
+    priority: critical
+    description: |
+      Given a case_id whose bound test exercises the code but asserts nothing meaningful
+      (e.g. only `assert result is not None`), mutation testing returns score ≤ 0.35
+      and the surviving mutants list contains at least one relational or return-value
+      mutation in the code under test.
+    test_id: "tests/contract/test_mutation_testing.py::test_flags_a_case_with_weak_tests"
+
+  - id: rejects-unknown-capability
+    kind: negative
+    priority: high
+    description: "Running mutation testing against a non-existent capability_id fails with a clear error, not a stack trace."
+    test_id: "tests/contract/test_mutation_testing.py::test_rejects_unknown_capability"
+
+  - id: excludes-equivalent-mutants-from-denominator
+    kind: invariant
+    priority: critical
+    description: |
+      Given a fixture where two mutants are independently confirmed equivalent (e.g. via
+      AST normalization), the reported score uses (total − equivalents) as the
+      denominator. A direct numerical check, not just a flag.
+    test_id: "tests/contract/test_mutation_testing.py::test_equivalent_mutants_excluded"
+
+  - id: respects-inline-suppression-marker
+    kind: invariant
+    priority: high
+    description: |
+      Lines marked with `# sdd: mutation-equivalent` are not mutated. The report lists
+      them as suppressed (count visible) so suppression cannot be silent.
+    test_id: "tests/contract/test_mutation_testing.py::test_respects_inline_suppression"
+
+  - id: only-mutates-changed-cases-in-changed-cases-scope
+    kind: boundary
+    priority: high
+    description: |
+      When invoked with scope=changed-cases, only lines covered by tests whose case_id
+      appears in the diff are mutated. Unchanged cases are not re-mutated, even if
+      their lines are coincidentally touched by the change.
+    test_id: "tests/contract/test_mutation_testing.py::test_changed_cases_scope_isolates"
+
+  - id: detects-regression-against-baseline
+    kind: regression
+    priority: critical
+    description: |
+      Given a previous baseline mutation score for a capability, a run that produces a
+      lower score returns regression_signal=regressed and exits non-zero. A run that
+      produces the same or a higher score does not.
+    test_id: "tests/contract/test_mutation_testing.py::test_detects_regression"
+
+  - id: completes-within-budget-on-default-scope
+    kind: performance
+    priority: high
+    description: |
+      For a capability of ~500 lines with ~50 bound tests, a default-scope run
+      completes within 5x the base test suite wall-clock time on a single machine.
+      Measured against the repo's own test suite, not a synthetic benchmark.
+    test_id: "tests/contract/test_mutation_testing.py::test_completes_within_budget"
+
+  - id: arid-line-filter-skips-defensive-code
+    kind: invariant
+    priority: normal
+    description: |
+      Logging calls, trivial getters, and defensive guards (e.g. `if x is None: return None`
+      where x is type-narrowed elsewhere) are not mutated by default. Authors can opt back
+      in via the rigorous operator set.
+    test_id: "tests/contract/test_mutation_testing.py::test_arid_line_filter"
+
+# -------------------------------------------------------------------------
+# Definition of done
+# -------------------------------------------------------------------------
+
+definition_of_done:
+  conditions:
+
+    - id: all-cases-pass
+      statement: "Every case above has a passing contract test."
+      verifiable_by: contract_test
+      evidence_ref: "tests/contract/test_mutation_testing.py"
+
+    - id: schema-valid
+      statement: "This spec.yaml validates against capability_spec.schema.yaml."
+      verifiable_by: schema_validation
+
+    - id: meets-own-mutation-score
+      statement: |
+        The mutation-testing capability itself has mutation score ≥ 0.75 on the
+        default operator set. The framework cannot ship a feature that fails its
+        own quality bar.
+      verifiable_by: mutation_score
+      evidence_ref: "tests/contract/test_mutation_testing.py"
+
+    - id: cli-and-mcp-surface-documented
+      statement: |
+        Both `sdd mutate` (CLI) and the `mutate_capability` MCP tool are documented in
+        README.md with at least one worked example per scope mode.
+      verifiable_by: manual_check
+      evidence_ref: "README.md, .governance/capabilities/mutation-testing/design.md"
+
+    - id: ci-soft-gate-recipe-published
+      statement: |
+        .github/workflows/ contains a copy-pasteable recipe for soft-gate CI integration
+        (per-PR, changed-cases scope, regression-only blocking). Adopters do not need to
+        invent the wiring themselves.
+      verifiable_by: manual_check
+      evidence_ref: ".github/workflows/mutation.yml"
+
+# -------------------------------------------------------------------------
+# Non-functional requirements
+# -------------------------------------------------------------------------
+
+non_functional:
+  performance: |
+    Default-scope run completes within 5x the base test suite wall-clock time on a
+    single machine for a 500-line / 50-test capability. The framework must not make
+    mutation testing too slow for per-PR use.
+  observability: |
+    Surviving mutants must include file:line and a human-readable description of the
+    mutation operator applied. Reports must distinguish kills from timeouts from errors;
+    timing out is not a kill.
+  compatibility: |
+    Works with pytest 7+ and Python 3.11+. Does not require any change to existing test
+    files. Adopters install sdd-plus-plus[mutate] and run; no migration burden.
+
+# -------------------------------------------------------------------------
+# Bounded authority for tasks within this capability
+# -------------------------------------------------------------------------
+
+tasks_must:
+  use_patterns:
+    - "Wrap mutmut as the execution engine. Do not reimplement mutation operators in-house."
+    - "All mutation runs are scoped to lines covered by tests bound to specific case_ids — never the whole codebase by default."
+    - "Equivalent-mutant suppression is always visible in the report. Silent suppression is a bug."
+  avoid_dependencies:
+    - "Do not introduce cosmic-ray or MutPy as a dependency. They are documented alternatives, not built-in engines."
+    - "Do not introduce an LLM into the equivalent-mutant detection path until classical methods (arid-line + AST normalization) are exhausted."
+
+forbidden:
+  - "Reporting a mutation score without naming the operator set that produced it."
+  - "Counting equivalent mutants as kills."
+  - "Blocking a PR on an absolute mutation score threshold. Only regression against baseline may block."
+  - "Mutating files outside the capability's covered set in changed-cases scope."
+  - "Silently suppressing surviving mutants. Suppression must be declared and visible in the report."
+  - "Treating timeouts as kills."
+
+related_capabilities:
+  - example-feature
+
+# -------------------------------------------------------------------------
+# Narrative — design rationale and open questions
+# -------------------------------------------------------------------------
+
+notes:
+  design_rationale: |
+    Why mutation testing belongs in sdd-plus-plus at all. The framework already binds
+    tests to acceptance assertions by case_id. That binding is structural — it proves
+    a test was written for the right assertion. It does not prove the test actually
+    asserts what acceptance claims. Mutation testing is the audit that closes the loop.
+
+    Why mutmut, specifically. Strongest maintenance signal of the Python mutation
+    testing tools (v3.3.0 May 2025), zero-config pytest integration, built-in
+    test-mutant mapping. cosmic-ray's distributed mode is genuinely powerful but its
+    configuration burden makes it the wrong default. MutPy has the strongest operator
+    catalog academically but maintenance has lapsed.
+
+    Why scope by case_id rather than by file or diff. The framework already knows
+    which tests are bound to which acceptance criteria. Scoping mutation to the lines
+    covered by tests bound to changed case_ids is a smaller, more precise surface
+    than even Google's diff-scoped model — and nothing else has this information.
+
+    Why regression-only gating, never absolute threshold. Beller et al.'s Facebook
+    study is unambiguous: dogmatic absolute thresholds reduce adoption. Developers
+    disengage when surviving mutants are uninteresting. Regression against baseline
+    is the only gate that aligns the score with what the team actually cares about:
+    not letting test quality slip.
+
+    Why the framework reports surviving mutants as the primary deliverable. The
+    score is a summary; the surviving mutants are the work. Trail of Bits 2025
+    landed this argument: use mutation testing as a diagnostic, not a gate. The
+    capability surfaces weak tests; humans strengthen them. The number on the
+    dashboard is a side effect.
+
+  open_questions: |
+    1. Should we ship a `sdd mutate --baseline-update` command, or require the
+       baseline to be updated only via a separate manual step? Auto-updating on
+       every passing run risks normalizing score drift.
+
+    2. The `# sdd: mutation-equivalent` inline marker is simple but couples
+       suppression to source code. Should equivalent-mutant declarations also be
+       allowed in the capability spec itself (under a new `mutation:` block)?
+       Open question — both have advantages.
+
+    3. Property-based mutation testing (Bartocci et al. 2023) is conceptually the
+       closest prior art to what we're doing. Worth a v0.5 spike to see whether
+       integration with hypothesis would amplify the signal further.
+
+    4. Equivalent-mutant detection via LLM (Tian et al. 2024) is promising but
+       not yet accurate enough for high-precision use. Reassess in 12 months.
+
+  related_findings_notes: |
+    No findings yet — this is a fresh capability. The research analysis at
+    .governance/capabilities/mutation-testing/research.md is the grounding document
+    and should be treated as a candidate finding once the capability ships its
+    first task. Specifically: the claim that scoping by case_id is a smaller
+    surface than Google's diff-scoped model is novel-adjacent (principled novelty,
+    not invention) — that framing should become a finding so future capabilities
+    don't relitigate the design.

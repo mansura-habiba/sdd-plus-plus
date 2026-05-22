@@ -15,6 +15,24 @@ capabilities:
     one_liner: "Starter capability — rename and edit for your real first capability."
     spec_path: ".governance/capabilities/example-feature/spec.yaml"
 
+  - id: mutation-testing
+    name: "Mutation Testing"
+    status: roadmap
+    target_release: "v0.4"
+    owner: "@mansura-habiba"
+    one_liner: "Verify tests bound to case_ids actually assert the contract, not just touch the lines."
+    spec_path: ".governance/capabilities/mutation-testing/spec.yaml"
+    tags: [test-quality, ci, roadmap]
+
+  - id: elicitation-and-escalation
+    name: "Elicitation and Escalation"
+    status: roadmap
+    target_release: "v0.5"
+    owner: "@mansura-habiba"
+    one_liner: "Turn AI uncertainty and human handoff into refusable artifacts — declared triggers, blocked plans, Eve the Elicitor, anchored escalations."
+    spec_path: ".governance/capabilities/elicitation-and-escalation/spec.yaml"
+    tags: [ai-coordination, governance, roadmap]
+
   # Add a roadmap entry like this when planning ahead:
   # - id: payments
   #   name: "Payments Integration"

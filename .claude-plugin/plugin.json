@@ -21,7 +21,8 @@
   ],
   "agents": [
     "./.bob/modes/bob-scaffolder.md",
-    "./.bob/modes/dana-reviewer.md"
+    "./.bob/modes/dana-reviewer.md",
+    "./.bob/modes/eve-elicitor.md"
   ],
   "commands": [
     "./commands/sdd-init.md",
