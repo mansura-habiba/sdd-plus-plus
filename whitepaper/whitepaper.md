@@ -1,4 +1,6 @@
-# SDD++: A Governance Framework for AI-Assisted Software Engineering
+# Solving the Software Engineering Problem in the AI Era
+
+**SDD++: A discipline of spec-driven development, mechanical enforcement, honest measurement, and human ownership.**
 
 **Version:** 0.4.0 (draft)
 **Author:** Mansura Habiba
@@ -9,11 +11,11 @@
 
 ## Abstract
 
-We propose **Spec-Driven Development Plus Plus (SDD++)**, a software engineering method for teams that use AI coding assistants as a routine part of their development workflow. SDD++ targets the failure modes that the first wave of AI-coding tools (GitHub Copilot, Cursor, Claude Code, Aider) and the first wave of SDD tools (Kiro, GitHub spec-kit, Tessl) have surfaced but not solved: AI sycophancy, AI-authored tests that please code rather than specification, code-quality regression across long-running sessions, loss of human ownership over AI-produced artifacts, the inability to audit *why* a particular line of code was written — and, foundationally, the absence of measurement discipline that attributes downstream cost back to fast generation.
+The first wave of AI coding tools (GitHub Copilot, Cursor, Claude Code, Aider) and the first wave of Spec-Driven Development tools (Kiro, GitHub spec-kit, Tessl) have surfaced a set of failure modes the discipline has not solved: AI sycophancy, AI-authored tests that please code rather than specification, code-quality regression across long-running sessions, loss of human ownership over AI-produced artifacts, the inability to audit *why* a particular line of code was written — and, foundationally, the absence of measurement discipline that attributes downstream cost back to fast generation.
 
-The method rests on six principles enforced mechanically rather than socially: governance is embedded in the repository, specs are executable contracts, authority is bounded, evidence is required for trust, AI is a collaborator that may not author load-bearing artifacts, and measurement is part of the artifact rather than an afterthought. The framework is shipped as a Python tool (`sdd-plus-plus`) that bootstraps any repository with the structure, hides schema files inside the tool to prevent vendor lock-in, exposes itself to AI assistants via the Model Context Protocol, and tracks both progress and outcomes automatically. We argue that this approach is necessary because AI assistants are excellent at producing fluent-but-wrong output, and the only durable counter-measure is a layer the AI cannot author paired with a measurement substrate the AI cannot game.
+We propose **Spec-Driven Development Plus Plus (SDD++)** as the second-generation answer: a software engineering method for teams that use AI coding assistants as a routine part of their workflow, designed against the specific failure modes the first generation surfaced. The method rests on six principles enforced mechanically rather than socially — governance is embedded in the repository, specs are executable contracts, authority is bounded, evidence is required for trust, AI is a collaborator that may not author load-bearing artifacts, and measurement is part of the artifact rather than an afterthought. The framework is shipped as a Python tool (`sdd-plus-plus`) that bootstraps any repository with the structure, hides schema files inside the tool to prevent vendor lock-in, exposes itself to AI assistants via the Model Context Protocol, and tracks both progress and outcomes automatically. We argue that this approach is necessary because AI assistants are excellent at producing fluent-but-wrong output, and the only durable counter-measure is a layer the AI cannot author paired with a measurement substrate the AI cannot game.
 
-This paper articulates the challenges that motivate the method, the research position and pillars that anchor the broader program, the design of the proposed solution, why we believe it improves on existing approaches, and the honest limitations of the current state. It is a working paper: the framework exists in code, but its real validation requires longitudinal field data we do not yet have.
+This paper articulates the challenges that motivate the method, the research position and pillars that anchor the broader program, the design of the proposed solution, why we believe it improves on existing approaches, ten benchmarks for assessing AI coding tools and a diagnostic use of mutation testing, the honest limitations of the current state, and a worked example. It is a working paper: the framework exists in code, but its real validation requires longitudinal field data we do not yet have.
 
 ---
 
@@ -25,7 +27,7 @@ Spec-Driven Development (SDD) emerged in 2025–2026 as a response. The premise 
 
 SDD++ is our attempt at the second-generation answer. It is opinionated where the first generation was permissive, structured where the first generation was prose, AI-resistant where the first generation was AI-friendly, and measurement-honest where the first generation accepted volume metrics as proxies for productivity. It exists because the team building it had a concrete operational problem — a mixed-seniority team using AI coding assistants where juniors ignored design documents, seniors over-built, AI-generated tests reliably passed without proving the right behavior, and "productivity" reports celebrated PR volume while incidents quietly accumulated — and it is designed against the specific failure modes that problem surfaced.
 
-This paper is structured in nine parts. Section 2 articulates the challenges that motivate the method. Sections 3 and 4 state the research position and pillars. Section 5 presents the proposed framework. Section 6 argues why SDD++ improves on existing approaches. Section 7 is honest about limitations. Section 8 outlines future work, including a longer-horizon vision drawn from aviation safety culture. Section 9 concludes.
+This paper is structured in ten parts. Section 2 articulates the challenges that motivate the method. Sections 3 and 4 state the research position and pillars. Section 5 presents the proposed framework. Section 6 argues why SDD++ improves on existing approaches. Section 7 is honest about limitations. Section 8 proposes a benchmark suite for assessing AI coding tools and a diagnostic use of mutation testing. Section 9 outlines future work, including a longer-horizon vision drawn from aviation safety culture. Section 10 concludes. Appendix D walks through a worked example end to end.
 
 ---
 
@@ -324,7 +326,7 @@ Schemas — the JSON Schema definitions that validate every frontmatter block �
 
 ### 5.3 Workflow
 
-A representative workflow for a single task:
+A representative workflow for a single task (a fully worked example is in Appendix D):
 
 1. **Issue filed.** A team member files a GitHub issue using the bundled task-card form. The form captures: parent capability, one-line goal, bigger picture (minimum 50 characters, forcing actual sentences), in-scope, out-of-scope.
 
@@ -358,9 +360,9 @@ Underneath the four operational gates of §5.3 (schema validation, contract test
 
 **Penalty bookkeeping.** Every downstream cost — incident fix, security finding, rollback, customer escalation, test-suite rewrite — is attributed back to its generating plan. Attribution is automated where possible: `git bisect` for bug-introducing changes, SAST output cross-referencing for security findings, the existing rollback record for explicit reverts. Where the trace is ambiguous, a structured contestation review (modeled on patent-office opposition procedure) allows the originator seven days to dispute. Penalties accrue for a configurable horizon (default ninety days) and are normalized for system risk class: high-stakes systems carry smaller multipliers, so engineers and agents working on the hardest code are not perversely penalized for taking on the riskiest work. A plan with high penalty accrual does not lose retroactively, but its associated agent loses confidence allowance on future plans — the confidence-shape field in subsequent plans is discounted by the agent's historical accrual.
 
-**Verification surface index.** Mutation testing is integrated as a first-class quality signal. Every capability declares a minimum mutation kill rate in its `spec.md` frontmatter; the contract test suite is augmented by a mutation-test run on every PR that touches the capability's code. Coverage metrics remain advisory; mutation kill rate becomes load-bearing. Tools wired in by default: `mutmut` for Python, `Stryker` for JavaScript and TypeScript, `pitest` for Java. The framework treats a test suite that fails to catch arbitrary mutations as evidence that the suite is narrating the implementation rather than defending the specification — which is the structural failure mode of AI-generated tests described in §2.4. The framework also instruments mutation-test runs so that AI-generated test additions which do not raise the kill rate are flagged: a test that does not move the verification surface is presumed redundant until shown otherwise.
+**Verification surface index.** Mutation testing is integrated as a first-class quality signal. Every capability declares a minimum mutation kill rate in its `spec.md` frontmatter; the contract test suite is augmented by a mutation-test run on every PR that touches the capability's code. Coverage metrics remain advisory; mutation kill rate becomes load-bearing. Tools wired in by default: `mutmut` for Python, `Stryker` for JavaScript and TypeScript, `pitest` for Java. The framework treats a test suite that fails to catch arbitrary mutations as evidence that the suite is narrating the implementation rather than defending the specification — which is the structural failure mode of AI-generated tests described in §2.4. The framework also instruments mutation-test runs so that AI-generated test additions which do not raise the kill rate are flagged: a test that does not move the verification surface is presumed redundant until shown otherwise. The diagnostic uses of mutation testing — beyond the gate — are developed in §8.2.
 
-**Calibration tracking.** The plan schema already supports `confidence` (claimed at plan time) and `outcome` (recorded after merge) fields. The substrate aggregates these into a `signals.json` time-series store, and a new `sdd calibration` CLI surfaces per-agent calibration curves. An agent whose "high confidence" plans produce incidents at a rate higher than its "moderate confidence" plans is mis-calibrated and triggers an autonomy downgrade (a v0.5 mechanism described in §8.2). Calibration is reported per agent, per capability, and per change-class, with appropriate normalization for sample size — a new tool with ten plans is not graded against an established tool with a thousand.
+**Calibration tracking.** The plan schema already supports `confidence` (claimed at plan time) and `outcome` (recorded after merge) fields. The substrate aggregates these into a `signals.json` time-series store, and a new `sdd calibration` CLI surfaces per-agent calibration curves. An agent whose "high confidence" plans produce incidents at a rate higher than its "moderate confidence" plans is mis-calibrated and triggers an autonomy downgrade (a v0.5 mechanism described in §9.2). Calibration is reported per agent, per capability, and per change-class, with appropriate normalization for sample size — a new tool with ten plans is not graded against an established tool with a thousand.
 
 Together the three mechanisms compose a framing metric we call **Net Velocity**:
 
@@ -443,19 +445,78 @@ Other industries reached this point earlier. The pattern repeats: output becomes
 - **Per-team calibration.** How does the framework balance graduated trust against the operational reality of new AI tools being adopted faster than calibration can be measured?
 - **Plan granularity.** Is one plan per task too coarse for long-running features? Should plans be hierarchical?
 - **Penalty horizon.** Ninety days is the default attribution window. Is it too short for security findings (which surface slowly), too long for rapidly-iterating products? Per-capability horizons may be necessary.
-- **AI vs. AI crosscheck.** Section 8 below proposes structurally separated author-AI and reviewer-AI as a v0.4 feature. The unanswered question is whether the productivity cost (double inference) is worth the safety gain in practice.
+- **AI vs. AI crosscheck.** Section 9 below proposes structurally separated author-AI and reviewer-AI as a v0.4 feature. The unanswered question is whether the productivity cost (double inference) is worth the safety gain in practice.
 
 ---
 
-## 8. Future work
+## 8. Benchmarking and diagnostics for AI coding assistants
+
+The measurement substrate (§5.5) makes per-change attribution possible. The next question is how to use that capability to grade the AI coding tools themselves, and how to use mutation testing as a diagnostic — not just a CI gate — for understanding what changed and reviewing better. Section 8.1 proposes a ten-benchmark suite; §8.2 develops mutation testing as a diagnostic instrument.
+
+### 8.1 Benchmarks for assessing AI coding tools
+
+Choosing among AI coding assistants today is a vendor-marketing exercise. Each tool publishes selective benchmarks against synthetic tasks (HumanEval, MBPP, SWE-bench) that bear little relationship to the operational properties that matter in real teams. We propose ten benchmarks rooted in the operational substrate of SDD++, all of which can be run by any team that has adopted the framework. Each benchmark has a test scenario, a scoring rule, and a baseline.
+
+**B1: Calibration accuracy.** Over N plans authored by the tool, what fraction of `confidence: high` plans produced `outcome: success`? What fraction of `confidence: moderate`? `low`? A well-calibrated tool's outcomes align with its claims. Mis-calibration in either direction (over-confident or under-confident) is a signal. *Score:* Brier-like metric on (confidence, outcome) pairs. *Baseline:* random tool would produce flat curves; a well-calibrated tool produces monotonic alignment.
+
+**B2: Sycophancy resistance.** Present the tool with a flawed premise embedded in a feature request (e.g., "implement caching for this function" when the function is non-deterministic). Does the tool's challenge block surface the conflict, or does it produce caching code as requested? *Score:* fraction of seeded flawed requests where the challenge block names the actual flaw. *Baseline:* near-zero for tools without a forced challenge mechanism.
+
+**B3: Specification fidelity.** Given a spec with cases covering positive, negative, boundary, and invariant behaviors, does the AI's implementation pass all cases, including the invariants? Or does it pass the positive cases and silently weaken the others? *Score:* per-case pass rate, weighted by case type. *Baseline:* TDD-only flow without spec types.
+
+**B4: Mutation-survival rate of AI tests.** When the tool authors tests for production code it did *not* write, what fraction of mutations to that code do the tests catch? When the tool authors *both* the code and the tests, what fraction? The gap between these is the tautology gap (§2.4). *Score:* mutation kill rate, AI-tests-only vs. AI-code-and-tests. *Baseline:* humans-only run for comparison.
+
+**B5: Penalty accrual rate.** Over a sliding window (default ninety days), what is the average penalty score per plan attributed to the tool, normalized for risk class and plan count? *Score:* penalty per plan. *Baseline:* comparison against other tools in the same codebase.
+
+**B6: Spec drift contribution.** Over N sessions, does the tool produce code consistent with the existing capability specs, or does it introduce drift — functions matching the spec name with subtly different behavior, new patterns inconsistent with declared coding standards, conventions diverging silently across modules? *Score:* spec-conformance check per change. *Baseline:* same codebase reviewed by a human-only team.
+
+**B7: Context economy.** Given the same task, what is the ratio of input tokens to output tokens? More precisely: what is the token budget consumed per unit of useful work produced? Tools that re-load the entire repository on every interaction lose; tools that use focused-context primitives (such as `get_progress` and `list_findings`) win. *Score:* token-per-useful-output ratio. *Baseline:* maximum-context-window flow.
+
+**B8: Challenge block quality.** When forced to produce a challenge block (§5.3), are the concerns substantive or templated? Substantive means the concern names a specific risk that would not have surfaced without it. Templated means generic ("this might have edge cases"). *Score:* human-rated substantiveness on a sample of challenge blocks, with inter-rater agreement reported. *Baseline:* random sample of issues raised in code review under the same codebase.
+
+**B9: Handover discipline.** When the tool hands off work to another agent or to a human, does it produce the structured handover artifact (confidence shape, dissent log, etc.) the framework expects, or does it produce a status-style "done" handoff? *Score:* schema conformance plus dissent-log substantiveness. *Baseline:* tools without handover support.
+
+**B10: Cross-session consistency.** Code from session 1 vs. code from session 100, on related tasks in the same capability. How similar are the patterns? Identical patterns are over-conformity (the tool memorized the codebase and is no longer thinking); wildly different patterns are drift (the tool re-derives every time and forgets). The right answer is somewhere in between. *Score:* structural similarity index weighted by convention markers. *Baseline:* human team writing the same tasks over the same period.
+
+The intent of these benchmarks is not to produce a single leaderboard score. It is to produce a *vector of properties* that an engineering organization can use to choose, monitor, and demote AI coding tools as operational evidence accumulates. The framework treats this benchmark set as evolving: missing benchmarks (B-?) are tracked in `notes/benchmark-gaps.md` and filled as the literature and the practice catch up.
+
+A benchmark suite that is not adversarial degrades quickly. Tools train on benchmarks. We expect B1-B10 to be partially gameable within twelve to eighteen months of public adoption, and the framework versions the benchmark set so that adversarial extensions ship with the tool. Honest assessment requires assuming the assessed tools will try to satisfy the metric rather than the underlying property.
+
+### 8.2 Mutation testing as a diagnostic, not just a gate
+
+Mutation testing has been described in §5.5 as a CI gate: PRs that drop the mutation kill rate below the declared threshold fail. That use is necessary but insufficient. The deeper value of mutation testing is as a *diagnostic instrument*: a tool for understanding what changed in a codebase and reviewing it more effectively.
+
+**Mutation diffs across PRs.** When a PR is opened, the framework runs mutation testing twice: against `main` and against the PR head. The diff in the surviving mutants — *new* surviving mutants the PR introduces, *resurrected* surviving mutants the PR brings back, *killed* mutants the PR eliminates — is itself a report. A reviewer who reads the mutation diff before reading the code diff sees, in advance, the parts of the change the test suite does not defend. This re-orients human attention from "is this code correct?" to "do the tests prove this code does what it claims?" — which is a more answerable question with a faster turnaround.
+
+**Reading surviving mutants as review aids.** Each surviving mutant is a sentence: "if I change X here, no test fails." That sentence is information. Surviving mutants that change error-handling paths are saying *the error handling is not under test*. Surviving mutants that flip a boundary condition are saying *the boundary is not under test*. A reviewer can read the list of surviving mutants and focus their attention on the corresponding code paths, rather than re-reading every line of the diff with equal weight. This is a redistribution of attention budget (§4.6), routed by mechanical signal.
+
+**Evaluating AI-generated tests.** When the AI adds N tests to a PR, the question is not "do the tests pass?" but "do the tests move the kill rate?" If five new tests add zero kills, the tests are tautological — they describe what the code does without challenging it. If five new tests add ten kills, they are doing real verification work. The framework flags zero-kill test additions automatically and routes them to human review with the diagnostic attached. This converts the §2.4 problem — AI tests that please code rather than spec — from invisible to flagged.
+
+**Equivalent mutant analysis.** Some surviving mutants are equivalent to the original code: a refactor that produces semantically identical behavior. These are noise, not signal. Tooling marks equivalent mutants explicitly so they are excluded from the kill-rate calculation and do not pollute reviewer attention. The framework's mutation adapters (`mutmut`, `Stryker`, `pitest`) all support equivalence annotations; the framework propagates them across runs and flags newly-suspected equivalents for human verification on a sample basis rather than every PR.
+
+**Mutation testing as drift detection.** Over time, a capability's mutation kill rate is a leading indicator of spec rot (§2.8). A capability whose kill rate drifts from 87% to 73% over a quarter is telling you something — the tests are no longer keeping pace with the code, or the code has grown branches that no one wrote tests for. The framework tracks mutation kill rate per capability over time in `signals.json` and surfaces drift in the `sdd doctor` output. A capability whose kill rate is stable while its complexity is rising is paradoxically suspicious: stability without test-suite growth often means the new code is not being challenged.
+
+**The reviewer's checklist with mutation.** A reviewer opening a PR sees, alongside the diff:
+
+- Mutation diff: new surviving / resurrected / killed mutants for this PR.
+- Capability kill-rate trajectory: this PR's effect on the capability's kill rate over the rolling window.
+- Test additions: kills added per test, with zero-kill tests highlighted.
+- Equivalent-mutant flags: any newly-suspected equivalents needing verification.
+
+The reviewer focuses where the mechanical signal directs them, and the AI's tests are evaluated on whether they actually expanded the verification surface or merely added compliance lines.
+
+This shifts mutation testing from a CI checkbox to a review primitive. The CI gate prevents kill-rate regression; the diagnostic view explains what changed, where the tests are weakest, and which of the AI's contributions are doing real work. The diagnostic is also the bridge to benchmark B4 in §8.1: per-tool mutation contribution becomes empirically measurable rather than reputationally claimed.
+
+---
+
+## 9. Future work
 
 The framework as described is v0.4. Several extensions are in design.
 
-### 8.1 v0.4: the measurement substrate (this release)
+### 9.1 v0.4: the measurement substrate (this release)
 
 The v0.4 release shipping with this whitepaper introduces the measurement substrate described in §5.5 as a core framework capability rather than a planned addition. Four mechanisms ship together:
 
-**Mutation testing integrated in CI.** Per-capability minimum kill rates declared in `spec.md` frontmatter, with `mutmut`, `Stryker`, and `pitest` adapters wired into `sdd validate --strict`. PRs that drop mutation score below the declared minimum fail CI. The mutation-test invocation is itself instrumented so AI-generated test additions that do not raise the kill rate are flagged.
+**Mutation testing integrated in CI.** Per-capability minimum kill rates declared in `spec.md` frontmatter, with `mutmut`, `Stryker`, and `pitest` adapters wired into `sdd validate --strict`. PRs that drop mutation score below the declared minimum fail CI. The mutation-test invocation is itself instrumented so AI-generated test additions that do not raise the kill rate are flagged. The diagnostic uses of mutation testing are developed in §8.2.
 
 **Penalty ledger.** Every plan in `.governance/plan/` accrues a `penalty_ledger` block as downstream events are attributed. Attribution is automated for bug fixes (`git bisect`), security findings (SAST output references the plan), and rollbacks (which already reference the changeset). Contested attributions go through a structured contestation review modeled on patent-office opposition procedure: the originator may dispute the attribution within seven days, and a third-party reviewer adjudicates.
 
@@ -465,11 +526,11 @@ The v0.4 release shipping with this whitepaper introduces the measurement substr
 
 Together the four mechanisms convert the framework from an output-discipline tool into an outcome-discipline tool. The discipline of writing plans, drafting challenges, accepting through human handles, and tracing every change to a capability remains; what changes is that the discipline is now graded by measured outcomes rather than by faithful compliance alone.
 
-### 8.2 v0.5 and beyond: aspects of crew resource management
+### 9.2 v0.5 and beyond: aspects of crew resource management
 
 The longer-horizon vision draws from aviation safety culture. We outline four directions without committing to delivery dates.
 
-**Graduated autonomy by action class.** Every AI action has a class (read-only, suggest-only, propose-with-diff, commit-with-checks, commit-and-execute). The autonomy required scales with class and with the per-tool calibration score from §8.1. A new AI tool starts at suggest-only; trust is earned through verified outcomes, and is lost through mis-calibration without human intervention.
+**Graduated autonomy by action class.** Every AI action has a class (read-only, suggest-only, propose-with-diff, commit-with-checks, commit-and-execute). The autonomy required scales with class and with the per-tool calibration score from §9.1. A new AI tool starts at suggest-only; trust is earned through verified outcomes, and is lost through mis-calibration without human intervention.
 
 **Mandatory callouts.** Critical operations (schema migrations, data backfills, security-sensitive code) require structured pre-action artifacts: affected resources, rollback path, estimated impact, escalation criteria. The AI cannot proceed without producing the callout; the human cannot approve without seeing it.
 
@@ -477,26 +538,27 @@ The longer-horizon vision draws from aviation safety culture. We outline four di
 
 **Recurrency requirements.** AI tools operating in a codebase for 12+ months must "re-check out" on critical capabilities periodically. A failing recurrency check downgrades autonomy until a human re-trains the tool. This is the discipline that prevents slow drift where an AI trusted in February is silently wrong by November.
 
-### 8.3 Research questions worth answering
+### 9.3 Research questions worth answering
 
 - What is the empirical relationship between SDD++ adoption depth and incident rate? We do not know; field data is needed.
 - Does the challenge-block requirement measurably reduce AI sycophancy, or do AI tools learn to produce template challenge blocks that satisfy the schema without surfacing real concerns?
 - Is the ownership-disclosure mechanism behaviorally effective at making engineers actually read AI-generated code, or does it become a checkbox?
 - Does penalty attribution change agent behavior — do agents become more conservative when their plans accrue penalties, and is that conservatism productive or risk-avoidant?
 - What is the right risk-class normalization curve? Are linear multipliers sufficient, or are non-linearities required for the highest-stakes systems?
+- Do the §8.1 benchmarks survive tool training? Within twelve months of public adoption, which benchmarks become tautological, and what is the right adversarial extension?
 - What is the optimal granularity for capability specs in a 100k-line codebase? 200k? 1M?
 
 We invite teams adopting SDD++ to publish their data. The honest test of any methodology is what happens to mutation score, incident rate, Net Velocity, and developer satisfaction over twelve months in a real codebase.
 
 ---
 
-## 9. Conclusion
+## 10. Conclusion
 
 We have argued that AI-assisted software engineering is at a phase shift analogous to aviation in the mid-1950s: the technology works, sometimes the planes crash, and the field has not yet developed the institutional discipline to make the human-machine system safer than either alone. SDD++ is our attempt at the first round of that discipline: schemas where prose used to be, mechanical enforcement where social norms used to be, AI-resistance where AI-friendliness used to be the implicit goal, and outcome-measurement where output-measurement used to be enough.
 
 The framework is opinionated, possibly overconfident, and demonstrably incomplete. It is also running in code, validating its own structure with its own tests, measuring its own outputs against its own outcomes, and ready for teams to operate against. The next stage of this work is not more design; it is field data. We will know whether SDD++ is the right approach when a real team has run it for a real release cycle and published what they measured — mutation score, incident rate, Net Velocity, and the calibration curves of the AI tools they used.
 
-Until then, we believe the *direction* — structured over prose, mechanical over social, AI-resistant over AI-friendly, ownership-required over ownership-implied, outcome-measured over output-measured — is the right direction. The specifics are negotiable; the direction is the load-bearing claim.
+Until then, we believe the *direction* — structured over prose, mechanical over social, AI-resistant over AI-friendly, ownership-required over ownership-implied, outcome-measured over output-measured — is the right direction. The specifics are negotiable; the direction is the load-bearing claim. Appendix D illustrates the full workflow against a concrete task; readers wanting to see SDD++ in motion should start there.
 
 ---
 
@@ -510,10 +572,11 @@ Until then, we believe the *direction* — structured over prose, mechanical ove
 | Human ownership gate | Implicit | Implicit | Implicit | Explicit (`sdd plan accept --by`) |
 | Challenge before code | No | No | No | Required (schema-enforced) |
 | Provenance trail | None | Partial | None | Plan → task → capability → principle |
-| Mutation testing | Optional | Optional | Optional | Required, capability-thresholded |
+| Mutation testing | Optional | Optional | Optional | Required, capability-thresholded, also used as diagnostic |
 | Penalty attribution | None | None | None | Per-plan ledger with bisect-based automation |
 | Calibration tracking | None | None | None | Per-agent curves with autonomy linkage |
 | Output vs outcome metric | Output (PRs) | Output (PRs) | Output (tests) | Net Velocity (output × surface × calibration ÷ penalty) |
+| AI tool benchmarking | Ad-hoc | None | None | Ten-benchmark suite (§8.1) |
 | Multi-vendor | n/a | Vendor-locked | Yes | Yes |
 | Migration from TDD | n/a | None | n/a | Direct (`sdd generate-acceptance`) |
 | Cost of adoption | Zero | High | Medium | Sixty seconds |
@@ -525,7 +588,9 @@ Until then, we believe the *direction* — structured over prose, mechanical ove
 - **Case** — one observable behavior the implementation must satisfy. Typed (positive, negative, invariant, boundary, regression, performance, security, idempotence).
 - **Challenge block** — the AI's required pushback record: understood_request, concerns, alternatives_considered. Empty fields fail schema validation.
 - **Confidence shape** — the per-item confidence declaration accompanying a plan: which parts the agent is sure about, which it is hypothesizing, which it is uncertain on, which it declined. Calibrated by historical penalty accrual.
+- **Equivalent mutant** — a code mutation that produces semantically identical behavior to the original; excluded from kill-rate calculation as noise.
 - **Finding** — a discovered fact about the system. AI may file as `suspected`; humans confirm.
+- **Mutation diff** — the per-PR comparison of surviving mutants between `main` and the PR head; used as a review primitive (§8.2).
 - **Mutation kill rate** — fraction of injected code mutations the test suite catches. The verification surface index.
 - **Net Velocity** — output rate × verification surface × calibration accuracy ÷ penalty accrual. The framing metric for outcome-graded productivity.
 - **Penalty ledger** — the per-plan accrual of downstream costs (incidents, security findings, rollbacks, test rewrites) attributed back to the plan that generated them.
@@ -533,6 +598,7 @@ Until then, we believe the *direction* — structured over prose, mechanical ove
 - **Principle** — one of the six governing principles enforced by the framework.
 - **Spec** — short for capability specification. The YAML frontmatter + markdown body in `capabilities/<id>/spec.md`.
 - **Verification surface index** — synonym for mutation kill rate; the measure of how much of the spec the test suite actually defends.
+- **Zero-kill test** — an AI-added test that does not raise the mutation kill rate; flagged for human review as presumptively redundant.
 
 ## Appendix C: Status of the implementation as of this writing
 
@@ -549,14 +615,122 @@ The Python implementation of SDD++ exists as `sdd-plus-plus` v0.4.0 (draft) in `
 
 **v0.4 measurement substrate (in active development as of this writing):**
 
-- `sdd mutation` — invokes the language-appropriate mutation adapter (`mutmut`, `Stryker`, `pitest`), enforces per-capability minimum kill rates declared in `spec.md` frontmatter, and writes results to `signals.json`
+- `sdd mutation` — invokes the language-appropriate mutation adapter (`mutmut`, `Stryker`, `pitest`), enforces per-capability minimum kill rates declared in `spec.md` frontmatter, and writes results to `signals.json`. Also produces the mutation diff and zero-kill flags described in §8.2.
 - Penalty ledger — `penalty_ledger` block in plan frontmatter, populated automatically by `sdd ledger ingest` from bisect output, SAST reports, and rollback records; contestation handled via `sdd ledger contest --plan <id>`
 - `sdd calibration` — surfaces per-agent calibration curves from `signals.json` time-series data
+- `sdd benchmark` — runs benchmarks B1-B10 (§8.1) against a configured tool; produces a vector of property scores rather than a single leaderboard number
 
-**Test suite at v0.3 baseline: 52 tests pass** across five files (`test_e2e`, `test_findings`, `test_plan`, `test_progress`, `test_serve`). Coverage includes schema validation, ownership-gate enforcement (plans cannot self-accept, AI handles are rejected by `sdd plan accept`), challenge-block requirement (plans missing the challenge block fail validation), and full CLI round-trips. v0.4 test additions targeting mutation, ledger, and calibration are in flight.
+**Test suite at v0.3 baseline: 52 tests pass** across five files (`test_e2e`, `test_findings`, `test_plan`, `test_progress`, `test_serve`). Coverage includes schema validation, ownership-gate enforcement (plans cannot self-accept, AI handles are rejected by `sdd plan accept`), challenge-block requirement (plans missing the challenge block fail validation), and full CLI round-trips. v0.4 test additions targeting mutation, ledger, calibration, and benchmark are in flight.
 
 **End-to-end dogfood verified at v0.3.** A fresh directory bootstrapped via `sdd init` produces 13 framework files plus auto-generated progress.md. `sdd validate --strict` exits 0. `sdd plan accept --id plan-example-001 --by @mansura` correctly advances the bundled example plan to `accepted` state, populating `accepted_by` and `accepted_at`. `sdd update-status` appends events to the progress log as expected.
 
-**What remains future work (v0.5+):** graduated autonomy by action class, mandatory pre-action callouts for critical operations, automated blameless post-incident review with structured chain reconstruction, and recurrency requirements for long-running AI tool deployments. These are described in §8.2.
+**What remains future work (v0.5+):** graduated autonomy by action class, mandatory pre-action callouts for critical operations, automated blameless post-incident review with structured chain reconstruction, and recurrency requirements for long-running AI tool deployments. These are described in §9.2.
 
 The framework at v0.4 is ready for the first real-team trial. The honest measurement question — does adopting SDD++ improve mutation score, reduce incident rate, improve Net Velocity, and improve developer satisfaction in a real codebase over twelve months — remains open and is the focus of the next phase of work.
+
+## Appendix D: Worked example — adding a rate limiter to the signup endpoint
+
+To illustrate the workflow in §5.3 and the measurement substrate in §5.5, this appendix walks through a single representative task end to end. The example is composed from features and patterns the framework supports; it is illustrative, not a published case study.
+
+**Context.** A team operates an API service with a `users` capability containing a `/signup` endpoint. The team's Q2 2026 security review flags the endpoint as vulnerable to credential-stuffing attacks. The team decides to add per-IP rate limiting: five attempts per minute, returning HTTP 429 with `Retry-After` on excess.
+
+**Step 1 — Issue filed.** A team member files a GitHub issue using the bundled task-card form:
+
+- *Parent capability:* `users`
+- *One-line goal:* Rate-limit `/signup` to defend against credential-stuffing
+- *Bigger picture:* The Q2 security review flagged the unprotected signup endpoint as a credential-stuffing target. The team wants to land protection before the next public launch without introducing latency for legitimate users or breaking the existing integration tests.
+- *In-scope:* rate-limit middleware on the signup route; per-IP windowed counter; 429 response with `Retry-After`; metrics for rate-limit hits.
+- *Out-of-scope:* account-level lockout; CAPTCHA integration; rate-limiting on other endpoints.
+
+**Step 2 — Plan drafted.** The engineer asks the AI assistant (Cursor in this example) to draft a plan via the `propose_plan` MCP tool. The plan saves to `.governance/plan/users-rate-limit.plan.md` with `status: draft`:
+
+```yaml
+---
+plan_id: users-rate-limit
+task_id: gh-1247
+capability: users
+status: draft
+authored_by:
+  ai: cursor-claude-opus-4-6
+confidence:
+  overall: moderate
+  per_item:
+    middleware_implementation: high
+    counter_storage_choice: moderate
+    edge_case_handling: low
+challenge:
+  understood_request: |
+    Add per-IP rate limiting to /signup, 5 attempts per minute, with
+    429 + Retry-After response. Must not break existing integration
+    tests. Must emit metrics for limit hits.
+  concerns:
+    - The default Redis storage backend assumes Redis is available
+      in test environments; our integration test suite uses in-memory
+      fakes which may not exercise the lock path. Recommend a dual
+      implementation behind a feature flag for safe rollout.
+    - Per-IP rate limiting can be evaded with proxies and is a partial
+      defense; the spec should note this and link to follow-up work
+      for account-level controls.
+  alternatives_considered:
+    - Token bucket with a higher refill rate (rejected: harder to reason
+      about attack-cost economics for credential stuffing).
+    - WAF-level rate limiting (rejected: deferred to platform team).
+do_not_modify:
+  - capabilities/users/spec.md
+  - capabilities/auth/spec.md
+---
+```
+
+**Step 3 — Plan accepted.** The tech lead reads the plan, including the challenge block. The first concern flags a real test-environment gap that would have caused a CI surprise. The lead runs:
+
+```
+sdd plan accept --id users-rate-limit --by @mansura
+```
+
+The schema updates `status: accepted`, populates `accepted_by: "@mansura"` and `accepted_at`. The MCP toolset deliberately does not expose `accept`; this transition is human-only.
+
+**Step 4 — Implementation.** The engineer pairs with the AI to write the middleware. AGENTS.md is auto-loaded by Cursor. A finding from a previous session is surfaced automatically via `list_findings(capability='users', tag='rate-limit')`:
+
+> *finding-2026-q1-redis-flapping:* Redis connection flapping during deploys caused brief 503s on auth endpoints. Mitigation: connection-pool warmup in middleware initializer. Capability: `users`. Status: confirmed.
+
+The AI implements the middleware with the connection-pool warmup pattern from the start, avoiding a re-derivation of the prior team's lesson.
+
+**Step 5 — Validation.** The engineer runs `sdd validate`. The validator confirms the plan references a real capability, the challenge block is non-empty, and the protected-paths list is respected. The mutation-test gate runs `mutmut` against the changed files: the test suite catches 87% of mutations, above the `users` capability's declared 80% threshold. The mutation diff (§8.2) shows three new surviving mutants in the boundary-handling branch (`requests == limit` vs `requests > limit`), which the engineer addresses by adding two boundary tests; the second pass catches 94%.
+
+**Step 6 — Pull request.** The PR template requires explicit confirmation:
+
+- [x] I have read every line of AI-generated code in this PR.
+- [x] I can defend the architectural choices.
+- [x] The AI's challenge block surfaced at least one concern, and I read it.
+- Ownership: @mansura
+
+**Step 7 — CI gate.** GitHub Actions runs five gates: `sdd validate --strict`, the contract test suite, the ownership-disclosure presence check, the protected-paths check, and the mutation gate. All pass. A reviewer is assigned.
+
+**Step 8 — Human review.** The reviewer opens the PR and the framework's reviewer view shows: mutation diff (three killed, zero new surviving, zero resurrected), capability kill-rate trajectory (80% → 94%, +14 points), and no zero-kill test additions. The reviewer focuses on judgment: should the limit be per-IP, or per-IP combined with username prefix? The engineer files a follow-up finding rather than expanding scope. The reviewer approves.
+
+**Step 9 — Merge.** On merge, the plan transitions to `status: executed`. The engineer records:
+
+```
+sdd plan outcome --id users-rate-limit --outcome success
+```
+
+**Step 10 — Downstream.** Three weeks later, an incident: a legitimate user gets rate-limited because they share an office IP with five colleagues signing up at the same event. The incident's `git bisect` attribution traces back to `users-rate-limit`. The framework appends to the plan's `penalty_ledger`:
+
+```yaml
+penalty_ledger:
+  - event_id: incident-2026-q2-shared-ip
+    event_type: customer_escalation
+    attributed_at: 2026-06-12
+    severity: low
+    risk_class_multiplier: 0.5   # users is mid-stakes
+    accrued_value: 0.5
+    contested: false
+```
+
+The penalty is also recorded against the originating agent (`cursor-claude-opus-4-6`) in `signals.json`. The agent's `low`-confidence claim on `edge_case_handling` turns out to have been honest; its `high`-confidence claim on `middleware_implementation` was the one that produced the issue, slightly mis-calibrating the curve. The team responds with a follow-up plan for shared-IP handling, with the original incident attached as context. The follow-up plan does not retroactively erase the penalty — the original was correctly attributed at the time, and the trajectory of the spec is preserved as the system's intellectual lineage.
+
+**What this example illustrates.**
+
+The framework's gates ran without any of them adjudicating judgment — schema validation, mutation testing, ownership disclosure, protected paths all passed mechanically. The human review focused on design questions, not compliance. The challenge block surfaced a real test-environment concern that saved a later debugging session. A prior finding informed the implementation without re-derivation. The mutation diagnostic redirected the engineer to a specific weak boundary in the test suite, raising the verification surface before the PR opened. When the inevitable downstream cost arrived, it attributed cleanly to the originating plan and agent, updating the calibration curve for future work. None of these properties hold under no-framework or first-generation SDD; they all hold here by mechanical enforcement.
+
+This is what *solving the software engineering problem in the AI era* looks like in concrete operation. The framework's claim is not that this workflow is the only possible answer — it is that the workflow's properties (mechanical gates, human ownership, measured outcomes, honest penalty attribution) are non-negotiable, and any framework that omits them is solving a different problem.
