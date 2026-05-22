@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SDD++ — System Overview</title>
+<style>
+  :root {
+    --bg: #FAFAF7;
+    --surface: #FFFFFF;
+    --border: #E8E5DE;
+    --border-strong: #C9C5BD;
+    --text: #1A1A1A;
+    --text-muted: #5C5C5C;
+    --text-faint: #8A8780;
+    --human: #B5651D;
+    --human-soft: #F5EAD9;
+    --ai: #4A6B7C;
+    --ai-soft: #E2EAEE;
+    --pass: #5A8C5A;
+    --fail: #B04848;
+    --measure: #6B5B95;
+    --measure-soft: #ECE8F2;
+    --gate: #C9A227;
+    --gate-soft: #F7EFD4;
+    --mono: 'SF Mono', Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: var(--sans); line-height: 1.55; }
+  body { padding: 32px 24px 80px; max-width: 1280px; margin: 0 auto; }
+
+  h1 { font-size: 32px; margin: 0 0 8px; letter-spacing: -0.02em; font-weight: 700; }
+  h1 small { display: block; font-size: 16px; font-weight: 400; color: var(--text-muted); margin-top: 8px; letter-spacing: 0; }
+  h2 { font-size: 22px; margin: 56px 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); letter-spacing: -0.01em; }
+  h3 { font-size: 16px; margin: 24px 0 8px; font-weight: 600; }
+  p { margin: 0 0 12px; color: var(--text-muted); }
+  p.lead { color: var(--text); font-size: 15px; }
+  code, .mono { font-family: var(--mono); font-size: 13px; background: var(--surface); padding: 1px 5px; border-radius: 3px; border: 1px solid var(--border); }
+
+  .header { padding: 24px 28px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 24px; }
+  .header .meta { display: flex; gap: 24px; margin-top: 16px; font-size: 13px; color: var(--text-faint); flex-wrap: wrap; }
+  .header .meta span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+  .legend-dot.human { background: var(--human); }
+  .legend-dot.ai { background: var(--ai); }
+  .legend-dot.measure { background: var(--measure); }
+  .legend-dot.gate { background: var(--gate); }
+
+  /* Cards / panels */
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px 24px; }
+  .grid { display: grid; gap: 16px; }
+  .grid.cols-2 { grid-template-columns: 1fr 1fr; }
+  .grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .grid.cols-6 { grid-template-columns: repeat(6, 1fr); }
+  @media (max-width: 900px) { .grid.cols-3, .grid.cols-6 { grid-template-columns: 1fr; } .grid.cols-2 { grid-template-columns: 1fr; } }
+
+  /* Principles */
+  .principle { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 14px 16px; }
+  .principle .num { font-family: var(--mono); font-size: 11px; color: var(--text-faint); letter-spacing: 0.1em; }
+  .principle h3 { margin: 4px 0 6px; font-size: 14px; }
+  .principle p { font-size: 13px; margin: 0; }
+  .principle.measurement { background: var(--measure-soft); border-color: #C7BDDA; }
+  .principle.measurement .num { color: var(--measure); }
+
+  /* Architecture tree */
+  .tree { font-family: var(--mono); font-size: 13px; line-height: 1.8; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 16px 20px; white-space: pre; overflow-x: auto; }
+  .tree .dir { color: var(--text); font-weight: 600; }
+  .tree .file { color: var(--text-muted); }
+  .tree .comment { color: var(--text-faint); }
+  .tree .human-owned { color: var(--human); }
+  .tree .ai-may-suggest { color: var(--ai); }
+  .tree .measure-data { color: var(--measure); }
+  .tree .auto { color: var(--text-faint); font-style: italic; }
+
+  /* Workflow */
+  .workflow { display: flex; flex-direction: column; gap: 0; }
+  .step { display: grid; grid-template-columns: 56px 1fr 220px; gap: 16px; align-items: start; padding: 14px 0; border-bottom: 1px dashed var(--border); }
+  .step:last-child { border-bottom: none; }
+  .step .num-circle { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; background: var(--surface); border: 2px solid var(--border-strong); }
+  .step.human .num-circle { border-color: var(--human); color: var(--human); }
+  .step.ai .num-circle { border-color: var(--ai); color: var(--ai); }
+  .step.both .num-circle { border-color: var(--text); color: var(--text); background: linear-gradient(135deg, var(--human-soft) 50%, var(--ai-soft) 50%); }
+  .step.gate .num-circle { border-color: var(--gate); color: var(--gate); background: var(--gate-soft); }
+  .step .body h3 { margin: 0 0 4px; font-size: 15px; }
+  .step .body p { margin: 0; font-size: 13px; }
+  .step .actor { font-size: 12px; color: var(--text-faint); padding-top: 8px; }
+  .step .actor .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-family: var(--mono); font-size: 11px; margin-right: 4px; margin-bottom: 2px; }
+  .badge.human { background: var(--human-soft); color: var(--human); }
+  .badge.ai { background: var(--ai-soft); color: var(--ai); }
+  .badge.framework { background: #ECEAE3; color: var(--text-muted); }
+  .badge.measure { background: var(--measure-soft); color: var(--measure); }
+  .badge.gate { background: var(--gate-soft); color: #8A6B0F; }
+
+  /* CI gates */
+  .gates { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-top: 8px; }
+  @media (max-width: 900px) { .gates { grid-template-columns: 1fr 1fr; } }
+  .gate-card { background: var(--surface); border: 1.5px solid var(--gate); border-radius: 6px; padding: 12px 14px; position: relative; }
+  .gate-card::before { content: '✓'; position: absolute; top: 8px; right: 10px; color: var(--pass); font-weight: 700; font-size: 16px; }
+  .gate-card .gate-num { font-family: var(--mono); font-size: 10px; color: var(--gate); letter-spacing: 0.15em; }
+  .gate-card h4 { margin: 4px 0 6px; font-size: 13px; font-weight: 600; }
+  .gate-card p { margin: 0; font-size: 12px; color: var(--text-muted); }
+
+  /* Measurement substrate */
+  .substrate { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  @media (max-width: 900px) { .substrate { grid-template-columns: 1fr; } }
+  .substrate-mech { background: var(--measure-soft); border: 1px solid #C7BDDA; border-radius: 6px; padding: 16px; }
+  .substrate-mech h3 { margin: 0 0 6px; color: var(--measure); font-size: 14px; }
+  .substrate-mech p { font-size: 13px; margin: 0; color: var(--text); }
+  .substrate-mech .data { font-family: var(--mono); font-size: 11px; color: var(--measure); margin-top: 8px; padding-top: 8px; border-top: 1px dashed #C7BDDA; }
+  .net-velocity { background: var(--text); color: var(--bg); padding: 18px 24px; border-radius: 6px; font-family: var(--mono); font-size: 14px; text-align: center; }
+  .net-velocity .label { font-size: 11px; letter-spacing: 0.15em; opacity: 0.7; margin-bottom: 8px; }
+  .net-velocity .formula { font-size: 16px; }
+
+  /* Wiki / knowledge flow */
+  .wiki-flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; align-items: center; margin-top: 16px; }
+  @media (max-width: 900px) { .wiki-flow { grid-template-columns: 1fr; } }
+  .wiki-node { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 12px; text-align: center; }
+  .wiki-node .label { font-family: var(--mono); font-size: 11px; color: var(--text-faint); }
+  .wiki-node .name { font-weight: 600; font-size: 13px; margin: 4px 0; }
+  .wiki-node .who { font-size: 11px; color: var(--text-muted); }
+  .wiki-arrow { text-align: center; color: var(--text-faint); font-size: 18px; }
+  @media (max-width: 900px) { .wiki-arrow { transform: rotate(90deg); padding: 8px 0; } }
+
+  /* Authority matrix */
+  table.matrix { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  table.matrix th, table.matrix td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); font-size: 13px; }
+  table.matrix th { background: #F2F0E9; font-weight: 600; font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-muted); }
+  table.matrix td.action { font-weight: 500; }
+  table.matrix tr:last-child td { border-bottom: none; }
+  table.matrix .can { color: var(--pass); font-weight: 700; }
+  table.matrix .cannot { color: var(--fail); font-weight: 700; }
+  table.matrix .partial { color: var(--gate); font-weight: 700; }
+
+  /* MCP integration */
+  .mcp-diagram { display: grid; grid-template-columns: 1fr 60px 1fr 60px 1fr; gap: 12px; align-items: center; margin-top: 16px; }
+  @media (max-width: 900px) { .mcp-diagram { grid-template-columns: 1fr; gap: 8px; } .mcp-arrow svg { transform: rotate(90deg); } }
+  .mcp-node { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 16px; text-align: center; }
+  .mcp-node.ai { border-color: var(--ai); background: var(--ai-soft); }
+  .mcp-node.server { border-color: var(--text); }
+  .mcp-node.repo { border-color: var(--human); background: var(--human-soft); }
+  .mcp-node h4 { margin: 0 0 6px; font-size: 14px; }
+  .mcp-node p { margin: 0; font-size: 12px; }
+  .mcp-tools { background: var(--surface); border: 1px dashed var(--border-strong); border-radius: 6px; padding: 12px; margin-top: 16px; }
+  .mcp-tools .tool { display: inline-block; font-family: var(--mono); font-size: 12px; background: #F2F0E9; padding: 4px 8px; margin: 3px; border-radius: 3px; color: var(--text); }
+  .mcp-tools .tool.no-accept { background: #F5DADA; color: var(--fail); text-decoration: line-through; }
+
+  /* SVG container */
+  .svg-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 16px; margin-top: 12px; overflow-x: auto; }
+
+  /* Footer */
+  footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-faint); }
+  footer a { color: var(--text-muted); }
+
+  /* Annotations */
+  .annotation { font-size: 12px; color: var(--text-faint); font-style: italic; margin-top: 4px; }
+
+  /* Status badges */
+  .status { display: inline-block; font-family: var(--mono); font-size: 10px; padding: 2px 6px; border-radius: 3px; letter-spacing: 0.05em; vertical-align: middle; margin-left: 6px; font-weight: 600; }
+  .status.shipped { background: #DBEDD9; color: #2D6B2D; border: 1px solid #A8D3A4; }
+  .status.active { background: var(--gate-soft); color: #8A6B0F; border: 1px solid #E8C76A; }
+  .status.planned { background: var(--ai-soft); color: var(--ai); border: 1px solid #9CBAC5; }
+
+  /* Timeline */
+  .timeline { position: relative; padding: 24px 0; }
+  .timeline-track { position: absolute; left: 0; right: 0; top: 50%; height: 2px; background: var(--border-strong); }
+  .timeline-events { display: grid; gap: 8px; position: relative; }
+  .tl-row { display: grid; grid-template-columns: 110px 1fr; gap: 12px; align-items: start; padding: 8px 0; border-bottom: 1px dashed var(--border); }
+  .tl-row:last-child { border-bottom: none; }
+  .tl-when { font-family: var(--mono); font-size: 11px; color: var(--text-faint); padding-top: 2px; }
+  .tl-when.active { color: var(--gate); font-weight: 600; }
+  .tl-when.merge { color: var(--measure); font-weight: 600; }
+  .tl-event h4 { margin: 0 0 4px; font-size: 13px; font-weight: 600; }
+  .tl-event p { margin: 0; font-size: 12px; }
+
+  /* Wiki read/write map */
+  .wiki-map { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 16px; }
+  @media (max-width: 900px) { .wiki-map { grid-template-columns: 1fr; } }
+  .wiki-side h3 { margin-top: 0; }
+  .wiki-side .item { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; margin-bottom: 6px; display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; font-size: 12px; }
+  .wiki-side .item .path { font-family: var(--mono); color: var(--text); }
+  .wiki-side .item .via { font-family: var(--mono); font-size: 10px; color: var(--text-faint); }
+  .wiki-side.reads { border-left: 3px solid var(--ai); padding-left: 16px; }
+  .wiki-side.writes { border-left: 3px solid var(--human); padding-left: 16px; }
+  .wiki-side .label { font-family: var(--mono); font-size: 11px; color: var(--text-faint); letter-spacing: 0.1em; margin-bottom: 8px; text-transform: uppercase; }
+
+  /* Roadmap / status sections */
+  .status-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 12px; font-size: 12px; color: var(--text-muted); }
+  .status-legend .status { margin: 0; }
+
+  /* SDLC phase ribbon */
+  .phase-ribbon { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin: 16px 0 24px; }
+  @media (max-width: 900px) { .phase-ribbon { grid-template-columns: repeat(2, 1fr); } }
+  .phase-chip { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 10px 8px; text-align: center; position: relative; }
+  .phase-chip::after { content: '→'; position: absolute; right: -10px; top: 50%; transform: translateY(-50%); color: var(--text-faint); font-size: 14px; z-index: 1; }
+  .phase-chip:last-child::after { content: '↻'; }
+  @media (max-width: 900px) { .phase-chip::after { content: ''; } }
+  .phase-chip .phase-num { font-family: var(--mono); font-size: 10px; color: var(--text-faint); letter-spacing: 0.1em; }
+  .phase-chip .phase-name { font-weight: 700; font-size: 12px; margin-top: 2px; color: var(--text); }
+  .phase-chip .phase-steps { font-size: 10px; color: var(--text-muted); margin-top: 4px; font-family: var(--mono); }
+
+  /* SDLC phase blocks */
+  .phase-block { border: 1px solid var(--border); border-radius: 6px; margin-bottom: 14px; overflow: hidden; }
+  .phase-header { background: #F2F0E9; padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .phase-header .ph-num { font-family: var(--mono); font-size: 11px; color: var(--text-faint); letter-spacing: 0.1em; }
+  .phase-header .ph-name { font-weight: 700; font-size: 14px; color: var(--text); }
+  .phase-header .ph-desc { font-size: 12px; color: var(--text-muted); margin-left: auto; font-style: italic; }
+  .phase-block .phase-body { background: var(--surface); padding: 4px 16px; }
+  .phase-block .step { padding: 12px 0; }
+
+  /* Self-iteration loop SVG container */
+  .iter-loop { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 16px; margin-top: 12px; }
+  .iter-loop .iter-caption { font-size: 12px; color: var(--text-muted); font-style: italic; margin-top: 8px; text-align: center; }
+
+  /* Mode comparison table */
+  .modes-table { width: 100%; border-collapse: collapse; margin-top: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .modes-table th, .modes-table td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .modes-table th { background: #F2F0E9; font-weight: 600; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-muted); }
+  .modes-table td.decision { font-weight: 500; }
+  .modes-table .mode-human { color: var(--human); font-weight: 600; }
+  .modes-table .mode-auto { color: var(--measure); font-weight: 600; }
+  .modes-table .mode-conditional { color: var(--gate); font-weight: 600; }
+  .modes-table tr:last-child td { border-bottom: none; }
+  .modes-callout { background: var(--measure-soft); border-left: 3px solid var(--measure); padding: 10px 14px; margin-top: 12px; border-radius: 0 4px 4px 0; font-size: 13px; }
+  .modes-callout strong { color: var(--measure); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>SDD++ — System Overview
+    <small>A discipline of spec-driven development, mechanical enforcement, honest measurement, and human ownership. Version 0.4.0 (draft) — 2026-05-22.</small>
+  </h1>
+  <div class="meta">
+    <span><span class="legend-dot human"></span> Human-owned</span>
+    <span><span class="legend-dot ai"></span> AI may draft / suggest</span>
+    <span><span class="legend-dot measure"></span> Measurement data</span>
+    <span><span class="legend-dot gate"></span> Mechanical gate</span>
+  </div>
+  <div class="status-legend">
+    <span class="status shipped">v0.3 SHIPPED</span> plan lifecycle, challenge block, acceptance gate, MCP server, findings, schema validation
+    <br/>
+    <span class="status active">v0.4 ACTIVE DEV</span> mutation gate, penalty ledger, calibration tracking, benchmark suite, author/reviewer separation
+    <br/>
+    <span class="status planned">v0.5 PLANNED</span> graduated autonomy, mandatory callouts, automated blameless incident review, recurrency
+  </div>
+</div>
+
+<!-- 1. SIX PRINCIPLES -->
+<h2>1 · The six principles (the load-bearing layer)</h2>
+<p class="lead">The method rests on six principles, each enforced mechanically wherever possible. Principle 6 (Measurement) sits underneath the other five as the substrate that grades whether they are working.</p>
+<div class="grid cols-3" style="margin-top:16px">
+  <div class="principle">
+    <span class="num">P1</span>
+    <h3>Governance is embedded, not sidecar</h3>
+    <p>Rules live in the repo (<code>.governance/</code>), run in CI, gate the merge button. No separate system to log into.</p>
+  </div>
+  <div class="principle">
+    <span class="num">P2</span>
+    <h3>Specs are executable contracts</h3>
+    <p>YAML frontmatter is the contract. Tests are the proof. Markdown alone is not a spec.</p>
+  </div>
+  <div class="principle">
+    <span class="num">P3</span>
+    <h3>Authority must be bounded</h3>
+    <p>Every plan declares what it does <em>not</em> do. Every task gives the AI a paths-it-cannot-touch list.</p>
+  </div>
+  <div class="principle">
+    <span class="num">P4</span>
+    <h3>Evidence is required for trust</h3>
+    <p>Change → plan → task → capability → principle. Chain auditable, not promised.</p>
+  </div>
+  <div class="principle">
+    <span class="num">P5</span>
+    <h3>AI is a collaborator, not an author</h3>
+    <p>AI drafts; humans own. AI is required to challenge weak premises before complying. Sycophancy is a failure mode.</p>
+  </div>
+  <div class="principle measurement">
+    <span class="num">P6 · Measurement substrate</span>
+    <h3>Measurement is part of the artifact</h3>
+    <p>Every change carries downstream cost attributed back to it. Mutation kill rate is load-bearing. Output without outcome is unaudited risk.</p>
+  </div>
+</div>
+
+<!-- 2. REPOSITORY ARCHITECTURE -->
+<h2>2 · Repository architecture</h2>
+<p class="lead">Two layers. The <strong>global <code>wiki/</code></strong> sits outside any single repo — it is organization-wide, holds the principles, the coding standards, the accumulated findings, and the reference patterns shared across every team. The per-project <strong><code>.governance/</code></strong> lives inside each repo and holds only what is specific to that codebase: capabilities, plans, contracts, architecture, progress, signals. Color marks ownership: <span style="color:var(--human)">human-owned (load-bearing)</span>, <span style="color:var(--ai)">AI may draft / suggest</span>, <span style="color:var(--measure)">measurement data</span>, <span style="color:var(--text-faint)">auto-generated</span>.</p>
+
+<h3 style="margin-top:16px">Global <code>wiki/</code> — cross-project, organization-wide</h3>
+<div class="tree"><span class="dir">wiki/</span>                              <span class="comment"># GLOBAL · not inside any project repo</span>
+  <span class="file human-owned">principles.md</span>                   <span class="comment"># the six principles · human-owned · org-wide</span>
+  <span class="file human-owned">coding-standards.md</span>             <span class="comment"># tribal knowledge: errors, logging, naming · human-owned</span>
+  <span class="dir">findings/</span>
+    <span class="file ai-may-suggest">&lt;id&gt;.md</span>                       <span class="comment"># discoveries · AI files as `suspected`; humans confirm · org-wide</span>
+  <span class="dir">_templates/</span>                       <span class="comment"># starter scaffolds: contracts, plans, specs, finding entries</span>
+  <span class="dir">projects/</span>                         <span class="comment"># cross-team project bridges + retrospectives</span>
+  <span class="dir">research/</span>                         <span class="comment"># research notes, position papers, hypothesis logs</span>
+  <span class="dir">reference/</span>                        <span class="comment"># design principles · design patterns · golden examples</span>
+  <span class="dir">meetings/</span>                         <span class="comment"># meeting notes, action items, decisions of record</span>
+  <span class="dir">inbox/</span>                            <span class="comment"># unsorted bootstrap content awaiting categorization</span></div>
+<p class="annotation">The wiki is shared across every project in the organization. A finding filed by one team becomes context for every other team's agent sessions. A pattern matured in one project's <code>inbox/</code> can be promoted to <code>reference/</code> and adopted org-wide.</p>
+
+<h3 style="margin-top:24px">Per-project <code>.governance/</code> — inside each repo</h3>
+<div class="tree"><span class="dir">.governance/</span>                       <span class="comment"># PROJECT-LOCAL · lives inside each repo</span>
+  <span class="dir">capabilities/</span>
+    <span class="file human-owned">REGISTRY.yaml</span>                 <span class="comment"># active + roadmap + deprecated · human-owned</span>
+    <span class="dir">&lt;feature&gt;/</span>
+      <span class="file human-owned">spec.md</span>                     <span class="comment"># cases + DoD + NFR + mutation threshold · human-owned</span>
+  <span class="dir">contracts/</span>
+    <span class="file ai-may-suggest">&lt;task-id&gt;.contract.md</span>         <span class="comment"># AI-drafted task-level structured contract (v0.4)</span>
+  <span class="dir">plan/</span>
+    <span class="file ai-may-suggest">&lt;task-id&gt;.plan.md</span>             <span class="comment"># AI-drafted plan · 6-field challenge · human-accepted</span>
+  <span class="file human-owned">arch_spec.md</span>                    <span class="comment"># whole-system architecture · human-owned</span>
+  <span class="file human-owned">instructions.md</span>                 <span class="comment"># project-specific AI rules · human-owned</span>
+  <span class="file auto">progress.md</span>                     <span class="comment"># auto-generated session-state snapshot</span>
+  <span class="file measure-data">signals.json</span>                    <span class="comment"># time-series: calibration · Net Velocity · per-iteration metrics</span>
+  <span class="file auto">.progress-log.yaml</span>              <span class="comment"># append-only event log</span>
+<span class="dir">AGENTS.md</span>                          <span class="comment"># at repo root · loads instructions.md + global wiki refs</span></div>
+<p class="annotation">Schemas live inside the <code>sdd-plus-plus</code> Python package, not in the repo. Adopters get schema upgrades by upgrading the tool — no copy-paste-into-every-repo fragmentation. The agent reads from <em>both</em> the global wiki and the project's <code>.governance/</code> on every session, via the MCP server.</p>
+
+<!-- 3. THE WORKFLOW -->
+<h2>3 · The SDLC workflow (agent-led · human at decision points)</h2>
+<p class="lead">SDD++ is agent-led at most steps. The human is not the universal reviewer; the human is the <em>decision-maker at a small set of gates</em> — spec contract acceptance, feasibility direction, and push/no-push. Everything else is the agent's work, including the self-iteration loop where the agent runs mutation tests + penalty validation against its own output before any human sees it. The framework name for this self-loop is the <strong>separate game</strong>: the agent's own QA pass on its own output, distinct from the human review.</p>
+<div class="modes-callout">
+  <strong>Two modes ship with the framework.</strong> <span class="status shipped">Standard mode</span> keeps humans at three gates (spec accept, feasibility direction, push). <span class="status planned">Bob mode</span> (custom configuration) auto-decides spec accept, feasibility direction, and plan accept when calibration history + risk class meet declared thresholds — humans remain at push for high-risk capabilities. Mode comparison is at the end of this section (§3a).
+</div>
+
+<div class="phase-ribbon">
+  <div class="phase-chip">
+    <div class="phase-num">PHASE 1</div>
+    <div class="phase-name">Spec contract</div>
+    <div class="phase-steps">step 1</div>
+  </div>
+  <div class="phase-chip">
+    <div class="phase-num">PHASE 2</div>
+    <div class="phase-name">Feasibility</div>
+    <div class="phase-steps">step 2</div>
+  </div>
+  <div class="phase-chip">
+    <div class="phase-num">PHASE 3</div>
+    <div class="phase-name">Plan &amp; Build</div>
+    <div class="phase-steps">steps 3–4</div>
+  </div>
+  <div class="phase-chip">
+    <div class="phase-num">PHASE 4</div>
+    <div class="phase-name">Self-iterate</div>
+    <div class="phase-steps">step 5 · loop</div>
+  </div>
+  <div class="phase-chip">
+    <div class="phase-num">PHASE 5</div>
+    <div class="phase-name">Review</div>
+    <div class="phase-steps">step 6</div>
+  </div>
+  <div class="phase-chip">
+    <div class="phase-num">PHASE 6</div>
+    <div class="phase-name">Push</div>
+    <div class="phase-steps">step 7</div>
+  </div>
+  <div class="phase-chip">
+    <div class="phase-num">PHASE 7</div>
+    <div class="phase-name">Close &amp; operate</div>
+    <div class="phase-steps">steps 8–9</div>
+  </div>
+</div>
+
+<!-- PHASE 1: SPEC CONTRACT -->
+<div class="phase-block">
+  <div class="phase-header">
+    <span class="ph-num">PHASE 1</span>
+    <span class="ph-name">Spec contract</span>
+    <span class="ph-desc">agent drafts structured contract from minimal human input · human accepts</span>
+  </div>
+  <div class="phase-body">
+    <div class="step ai">
+      <div class="num-circle">1</div>
+      <div class="body">
+        <h3>Agent drafts the spec contract</h3>
+        <p>The human supplies a minimal trigger — a one-line goal, parent capability, why now. The <strong>agent does the work of translating that into a structured spec contract</strong>: cases by type (positive, negative, invariant, boundary, security, idempotence), acceptance criteria, NFRs, mutation kill-rate threshold, risk class, declared confidence shape, and the protected-paths list. The output is YAML + frontmatter, schema-validated, machine-checkable — <em>not</em> a natural-language requirements document. Saved as <code>contract.status: draft</code>.</p>
+        <p>Validation runs immediately: <code>sdd validate</code> checks the spec contract against the same schema discipline as plans — missing required fields, contradictory values, out-of-range thresholds, broken cross-references all fail at the contract level before the human ever sees it. The validator is not a plan-only tool; <strong>contracts are first-class citizens of the schema layer</strong>.</p>
+        <p class="annotation" style="margin-top:6px">Why the agent and not the human: natural-language requirements have been the worst-engineered artifact in software for forty years. A structured contract is something an LLM is genuinely good at producing, and something a human can review in seconds (missing fields are mechanical). The human's job is to <em>accept or revise</em>, not to author from scratch.</p>
+      </div>
+      <div class="actor"><span class="badge ai">AI</span> drafts contract<br/><span class="badge framework">schema-validated</span><br/><span class="badge human">human</span> accepts (or revises)<br/><span class="status planned">Bob mode</span> auto-accepts if calibration &amp; risk thresholds met</div>
+    </div>
+  </div>
+</div>
+
+<!-- PHASE 2: FEASIBILITY -->
+<div class="phase-block">
+  <div class="phase-header">
+    <span class="ph-num">PHASE 2</span>
+    <span class="ph-name">Feasibility analysis</span>
+    <span class="ph-desc">agent considers code · no-code · human · hybrid · existing capability</span>
+  </div>
+  <div class="phase-body">
+    <div class="step ai">
+      <div class="num-circle">2</div>
+      <div class="body">
+        <h3>Agent runs feasibility analysis</h3>
+        <p>Before any code is written, the agent assesses how this contract should be fulfilled. The analysis explicitly considers <strong>four paths</strong>, with a recommendation and reasoning:</p>
+        <ul style="font-size:13px;color:var(--text);margin:6px 0 8px;padding-left:20px">
+          <li><strong>Code path</strong> — implement from scratch in the relevant capability.</li>
+          <li><strong>No-code path</strong> — configure an existing tool, workflow, or capability rather than writing code (often the right answer; almost never considered today).</li>
+          <li><strong>Human path</strong> — the request is better solved by a person doing something once rather than building software (one-off data fixes, manual review, communication).</li>
+          <li><strong>Hybrid path</strong> — partial code + manual workflow, or extend an existing capability rather than build a new one.</li>
+        </ul>
+        <p>The agent also surfaces <strong>existing capabilities that already do this or part of it</strong> via the capability registry — preventing duplicate builds. Output is a feasibility report attached to the contract, with the recommended path and rejected alternatives explained.</p>
+      </div>
+      <div class="actor"><span class="badge ai">AI</span> runs analysis<br/><span class="badge measure">capability registry consulted</span><br/><span class="badge human">human</span> picks path<br/><span class="status planned">Bob mode</span> auto-picks if one path dominates by a declared margin</div>
+    </div>
+  </div>
+</div>
+
+<!-- PHASE 3: PLAN & BUILD -->
+<div class="phase-block">
+  <div class="phase-header">
+    <span class="ph-num">PHASE 3</span>
+    <span class="ph-name">Plan &amp; Build</span>
+    <span class="ph-desc">agent drafts plan with enhanced challenge block · then implements</span>
+  </div>
+  <div class="phase-body">
+    <div class="step ai">
+      <div class="num-circle">3</div>
+      <div class="body">
+        <h3>Plan with enhanced challenge block</h3>
+        <p>Before writing code, the agent drafts a plan against the accepted spec contract. The plan is its own schema-validated artifact (<code>plan/&lt;task-id&gt;.plan.md</code>) — <code>sdd validate</code> checks it the same way it checks contracts. The <strong>challenge block</strong> on the plan has six required fields. The first three are the existing core; the last three are the v0.4 additions that move the challenge from compliance theater into actual reasoning:</p>
+        <ul style="font-size:13px;color:var(--text);margin:6px 0 8px;padding-left:20px">
+          <li><strong>understood_request</strong> — the agent's restatement of the contract in its own words. If the restatement is wrong, the human catches it before the agent writes a line.</li>
+          <li><strong>concerns</strong> — at least one substantive concern about the contract, the implementation path, or the surrounding system. "No concern surfaced because…" is explicitly required if the agent has nothing — silence is not allowed.</li>
+          <li><strong>alternatives_considered</strong> — at least one alternative implementation the agent considered and rejected, with the reason.</li>
+          <li><strong>causal_attribution</strong> <span class="status active">v0.4</span> — the agent's claim about cause and effect: <em>what produces the current state, what this change will cause downstream, what failure modes follow from each design decision</em>. Forces the agent to commit to a falsifiable causal model rather than a list of features. When the change later produces an incident, the causal attribution becomes the artifact that explains whether the agent's model of the world was right or wrong.</li>
+          <li><strong>trajectory_argument</strong> <span class="status active">v0.4</span> — the agent's argumentative claim about where this spec is heading and why this change is the right next step on that trajectory. Structured as a conjecture with horizons: <em>what I am sure about (testable now), what I think but cannot yet verify, what I know I don't know, what I might be wrong about</em>. Each tier carries different review weight. The "I might be wrong" tier is the highest-signal field — it explicitly names which assumptions, if falsified, would force restructuring versus minor adjustment.</li>
+          <li><strong>do_not_modify</strong> — the paths-the-AI-cannot-touch list, declared up front.</li>
+        </ul>
+        <p>The plan is saved as <code>status: draft</code>. <code>sdd validate</code> rejects the plan if any of the six fields are empty or contradict each other. A plan whose <code>causal_attribution</code> contradicts the spec contract's NFRs, or whose <code>trajectory_argument</code> claims an assumption is "sure" when the contract marks it as "might be wrong", fails validation mechanically.</p>
+      </div>
+      <div class="actor"><span class="badge ai">AI</span> drafts plan<br/><span class="badge framework">sdd validate · same schema as contract</span><br/><span class="badge human">human</span> accepts (or revises)<br/><span class="status planned">Bob mode</span> auto-accepts if calibration + risk OK</div>
+    </div>
+    <div class="step ai">
+      <div class="num-circle">4</div>
+      <div class="body">
+        <h3>Agent codes the implementation</h3>
+        <p>The agent implements against the accepted contract and plan. <code>AGENTS.md</code> auto-loads; the agent reads the parent capability spec, fetches relevant findings via <code>list_findings(capability, tag)</code>, conforms to <code>coding-standards.md</code>. The plan's <code>do_not_modify</code> list constrains paths. The agent writes both production code and tests against the named case_ids in the contract — but the tests will be evaluated in Phase 4 by mutation testing, so writing tautological "tests that please code" doesn't pass the gate.</p>
+        <p class="annotation" style="margin-top:6px">Human involvement here is light: pairing for context-sensitive judgment calls, naming intent for tricky names, redirecting if the agent goes off-piste. The agent does the typing.</p>
+      </div>
+      <div class="actor"><span class="badge ai">AI</span> implements<br/><span class="badge framework">do_not_modify enforced</span><br/><span class="badge framework">findings auto-loaded</span><br/><span class="badge human">human</span> pairs / redirects</div>
+    </div>
+  </div>
+</div>
+
+<!-- PHASE 4: SELF-ITERATION -->
+<div class="phase-block">
+  <div class="phase-header">
+    <span class="ph-num">PHASE 4</span>
+    <span class="ph-name">Self-iteration ("the separate game")</span>
+    <span class="ph-desc">agent runs mutation + penalty preview + author/reviewer split · loops until thresholds met</span>
+  </div>
+  <div class="phase-body">
+    <div class="step ai">
+      <div class="num-circle">5</div>
+      <div class="body">
+        <h3>Agent self-iterates — the separate game</h3>
+        <p>This is the phase the human currently does, badly. The agent runs <strong>its own QA pass on its own output</strong> in a separate loop, before the human sees anything. Five checks run on a cycle until thresholds are met or the agent declares blocked:</p>
+        <ol style="font-size:13px;color:var(--text);margin:6px 0 8px;padding-left:20px">
+          <li><strong>Schema validation</strong> — <code>sdd validate --strict</code> runs against the spec contract <em>and</em> the plan, not just the plan. Drift between contract and plan (a plan that claims to fulfill a case_id that does not exist in the contract, or contradicts a contract NFR) fails immediately.</li>
+          <li><strong>Mutation kill rate</strong> against the capability's declared threshold. Surviving mutants drive new test cases.</li>
+          <li><strong>Penalty preview</strong> — does this change touch high-penalty-history code? Does it match patterns from prior incidents in <code>signals.json</code>? Agent flags risk before merge.</li>
+          <li><strong>Author/reviewer split</strong> — a structurally separate reviewer-AI (different prompt, context, model) critiques the author-AI's work. The reviewer checks the plan's <code>causal_attribution</code> against the implementation: does the code actually produce the causes the plan claimed? Disagreements are surfaced. <span class="status active">v0.4</span></li>
+          <li><strong>Contract conformance</strong> — every case_id in the contract has at least one test that exercises it; every NFR has an assertion. The <code>trajectory_argument</code>'s "sure" tier must have testable evidence; the "might be wrong" tier must have explicit instrumentation if it ships.</li>
+        </ol>
+        <p>The loop runs autonomously. Each iteration writes results to <code>signals.json</code>. The agent stops when all five thresholds are met, when no further iteration improves them, or when it produces an explicit "blocked, need human" hand-off with reasons. The output is a Phase-5-ready package: code + tests + mutation report + penalty preview + reviewer-AI critique + contract/plan validation log.</p>
+      </div>
+      <div class="actor"><span class="badge ai">AI author</span> + <span class="badge ai">AI reviewer</span><br/><span class="badge measure">mutation</span> + <span class="badge measure">penalty preview</span><br/><span class="badge framework">runs autonomously</span><br/><span class="status active">v0.4</span> mutation · penalty · author/reviewer</div>
+    </div>
+  </div>
+</div>
+
+<div class="iter-loop">
+<svg viewBox="0 0 900 220" width="100%" xmlns="http://www.w3.org/2000/svg" style="font-family:var(--sans);font-size:12px">
+  <!-- Center label -->
+  <rect x="370" y="80" width="160" height="60" rx="6" fill="#ECE8F2" stroke="#6B5B95" stroke-width="1.5"/>
+  <text x="450" y="105" text-anchor="middle" font-weight="700" fill="#6B5B95">The separate game</text>
+  <text x="450" y="125" text-anchor="middle" fill="#5C5C5C" font-size="11">agent's QA on its own output</text>
+
+  <!-- Station 1: Author -->
+  <rect x="40" y="80" width="160" height="60" rx="6" fill="#E2EAEE" stroke="#4A6B7C" stroke-width="1.5"/>
+  <text x="120" y="100" text-anchor="middle" font-weight="600" fill="#4A6B7C">1 · Author AI</text>
+  <text x="120" y="118" text-anchor="middle" fill="#5C5C5C" font-size="11">writes code + tests</text>
+  <text x="120" y="132" text-anchor="middle" fill="#5C5C5C" font-size="11">against contract</text>
+
+  <!-- Station 2: Mutation -->
+  <rect x="240" y="20" width="160" height="50" rx="6" fill="#FFFFFF" stroke="#5A8C5A" stroke-width="1.5"/>
+  <text x="320" y="42" text-anchor="middle" font-weight="600" fill="#5A8C5A">2 · Mutation kill</text>
+  <text x="320" y="58" text-anchor="middle" fill="#5C5C5C" font-size="11">vs threshold · mutmut/Stryker/pitest</text>
+
+  <!-- Station 3: Penalty preview -->
+  <rect x="500" y="20" width="160" height="50" rx="6" fill="#FFFFFF" stroke="#6B5B95" stroke-width="1.5"/>
+  <text x="580" y="42" text-anchor="middle" font-weight="600" fill="#6B5B95">3 · Penalty preview</text>
+  <text x="580" y="58" text-anchor="middle" fill="#5C5C5C" font-size="11">touches high-risk paths?</text>
+
+  <!-- Station 4: Reviewer AI -->
+  <rect x="700" y="80" width="160" height="60" rx="6" fill="#E2EAEE" stroke="#4A6B7C" stroke-width="1.5"/>
+  <text x="780" y="100" text-anchor="middle" font-weight="600" fill="#4A6B7C">4 · Reviewer AI</text>
+  <text x="780" y="118" text-anchor="middle" fill="#5C5C5C" font-size="11">structurally separate</text>
+  <text x="780" y="132" text-anchor="middle" fill="#5C5C5C" font-size="11">critique · disagreement → human</text>
+
+  <!-- Station 5: Contract conformance -->
+  <rect x="500" y="150" width="160" height="50" rx="6" fill="#FFFFFF" stroke="#C9A227" stroke-width="1.5"/>
+  <text x="580" y="172" text-anchor="middle" font-weight="600" fill="#8A6B0F">5 · Contract conformance</text>
+  <text x="580" y="188" text-anchor="middle" fill="#5C5C5C" font-size="11">every case_id covered</text>
+
+  <!-- Station 6: Decide -->
+  <rect x="240" y="150" width="160" height="50" rx="6" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="1.5"/>
+  <text x="320" y="172" text-anchor="middle" font-weight="600" fill="#1A1A1A">6 · Loop or hand off</text>
+  <text x="320" y="188" text-anchor="middle" fill="#5C5C5C" font-size="11">iterate · or surface to human</text>
+
+  <!-- Arrows around the loop -->
+  <line x1="200" y1="100" x2="234" y2="55" stroke="#5C5C5C" stroke-width="1.5"/>
+  <polygon points="232,49 240,52 234,58" fill="#5C5C5C"/>
+
+  <line x1="400" y1="45" x2="494" y2="45" stroke="#5C5C5C" stroke-width="1.5"/>
+  <polygon points="494,41 502,45 494,49" fill="#5C5C5C"/>
+
+  <line x1="660" y1="55" x2="700" y2="98" stroke="#5C5C5C" stroke-width="1.5"/>
+  <polygon points="697,93 705,98 699,103" fill="#5C5C5C"/>
+
+  <line x1="780" y1="140" x2="660" y2="170" stroke="#5C5C5C" stroke-width="1.5"/>
+  <polygon points="662,166 654,172 663,176" fill="#5C5C5C"/>
+
+  <line x1="500" y1="175" x2="402" y2="175" stroke="#5C5C5C" stroke-width="1.5"/>
+  <polygon points="404,171 396,175 404,179" fill="#5C5C5C"/>
+
+  <line x1="240" y1="170" x2="155" y2="138" stroke="#5C5C5C" stroke-width="1.5"/>
+  <polygon points="159,135 152,135 158,142" fill="#5C5C5C"/>
+</svg>
+<div class="iter-caption">The agent's own QA pass — humans see only the output of this loop, not the iterations.</div>
+</div>
+
+<!-- PHASE 5: REVIEW -->
+<div class="phase-block">
+  <div class="phase-header">
+    <span class="ph-num">PHASE 5</span>
+    <span class="ph-name">Review</span>
+    <span class="ph-desc">human reads dashboards · not lines · judgment-only</span>
+  </div>
+  <div class="phase-body">
+    <div class="step human">
+      <div class="num-circle">6</div>
+      <div class="body">
+        <h3>Human review — metrics-driven, not line-by-line</h3>
+        <p>The human does not re-read every line of AI code. The self-iteration loop already did the line-level work. The human reads a <strong>review dashboard</strong>:</p>
+        <ul style="font-size:13px;color:var(--text);margin:6px 0 8px;padding-left:20px">
+          <li><strong>Mutation diff</strong> — new surviving / killed / resurrected mutants vs main.</li>
+          <li><strong>Capability kill-rate trajectory</strong> — does this change move the verification surface?</li>
+          <li><strong>Penalty preview</strong> — predicted attribution risk based on path-history similarity.</li>
+          <li><strong>Reviewer-AI disagreements</strong> — any unresolved critiques from the separate game.</li>
+          <li><strong>Calibration alignment</strong> — does the agent's stated confidence match its historical curve?</li>
+          <li><strong>Zero-kill test flags</strong> — tests that added compliance lines without raising the surface.</li>
+        </ul>
+        <p>The human's job: judgment-only — architectural fit, business sense, edge cases the contract didn't cover, follow-ups to file as findings. Compliance was already settled by gates and the separate game.</p>
+      </div>
+      <div class="actor"><span class="badge human">human</span> judgment only<br/><span class="badge measure">dashboard-driven</span><br/><span class="badge framework">not line-by-line</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- PHASE 6: PUSH -->
+<div class="phase-block">
+  <div class="phase-header">
+    <span class="ph-num">PHASE 6</span>
+    <span class="ph-name">Push decision</span>
+    <span class="ph-desc">push or no-push · the primary remaining human decision</span>
+  </div>
+  <div class="phase-body">
+    <div class="step human">
+      <div class="num-circle">7</div>
+      <div class="body">
+        <h3>Push or no-push</h3>
+        <p>The human's load-bearing decision. <strong>Push</strong>: merge + deploy via CD pipeline (env-gated by risk class). <strong>No-push</strong>: send back to the agent with structured feedback (which dashboard signal failed, what to address); the loop returns to Phase 4. There is no "approve with comments" middle state — every PR is either pushed or returned, mechanically.</p>
+      </div>
+      <div class="actor"><span class="badge human">human</span> push/no-push<br/><span class="badge framework">env-gated CD on push</span><br/><span class="status planned">Bob mode</span> auto-push for low-risk capabilities meeting all thresholds; high-risk always human</div>
+    </div>
+  </div>
+</div>
+
+<!-- PHASE 7: CLOSE & OPERATE -->
+<div class="phase-block">
+  <div class="phase-header">
+    <span class="ph-num">PHASE 7</span>
+    <span class="ph-name">Close &amp; operate</span>
+    <span class="ph-desc">agent session-close bookkeeping · production measurement loop</span>
+  </div>
+  <div class="phase-body">
+    <div class="step ai">
+      <div class="num-circle">8</div>
+      <div class="body">
+        <h3>Session close — agent updates state, findings, and scores</h3>
+        <p>At the end of the coding session, the <strong>agent</strong> (not the human) does the bookkeeping:</p>
+        <ul style="font-size:13px;color:var(--text);margin:6px 0 8px;padding-left:20px">
+          <li><strong>Updates <code>progress.md</code></strong> — what the session accomplished, what's still in flight, what to pick up next.</li>
+          <li><strong>Files findings as <code>suspected</code></strong> — anything non-obvious surfaced during build (a gotcha, a behavior quirk, a missing case in the contract). Humans confirm asynchronously.</li>
+          <li><strong>Records the score</strong> — agent's confidence claim vs. observed outcome of the iteration loop, attached to the plan/contract. Feeds the per-agent calibration curve in <code>signals.json</code>.</li>
+          <li><strong>Logs the trail</strong> — appends to <code>.progress-log.yaml</code> with the session's MCP tool calls, mutation results, and reviewer-AI verdicts.</li>
+        </ul>
+      </div>
+      <div class="actor"><span class="badge ai">AI</span> writes<br/><span class="badge framework">progress.md</span> · <span class="badge framework">findings/*</span> · <span class="badge measure">signals.json</span></div>
+    </div>
+    <div class="step both">
+      <div class="num-circle">9</div>
+      <div class="body">
+        <h3>Operations — production measurement loop</h3>
+        <p>Production observability feeds the substrate. Downstream events accrue to <code>penalty_ledger</code> over the 90-day horizon (bisect, SAST, rollbacks). Capability kill-rate drift tracked in <code>signals.json</code>; <code>sdd doctor</code> surfaces drift. New gotchas file as <code>suspected</code> findings; humans confirm; the wiki accumulates. Per-agent calibration curves regenerate weekly. <span class="status active">v0.4 penalty ledger</span> <span class="status planned">v0.5 automated blameless incident review · recurrency</span></p>
+      </div>
+      <div class="actor"><span class="badge measure">penalty</span> + <span class="badge measure">calibration</span><br/><span class="badge ai">AI</span> + <span class="badge human">human</span> confirm findings<br/><span class="badge framework">drift detection</span></div>
+    </div>
+  </div>
+</div>
+
+<p class="annotation" style="margin-top:12px">The cycle returns to Phase 1: operations data drives new spec contracts — penalty patterns reveal weak capabilities, confirmed findings prompt contract updates, drift detection triggers a renewal court (v0.5). The lifecycle does not end at deployment; deployment is the midpoint.</p>
+
+<!-- 3a. MODE COMPARISON -->
+<h3 style="margin-top:32px">3a · Modes — standard vs Bob (custom)</h3>
+<p>The framework ships with two configurable modes. <strong>Standard mode</strong> keeps humans at three gates (spec accept, feasibility direction, push). <strong>Bob mode</strong> (a custom configuration named for its first piloted user) auto-decides spec accept, feasibility direction, and plan accept when calibration history and risk class meet declared thresholds. The push decision narrows but does not disappear in Bob mode — high-risk capabilities still require human push.</p>
+
+<table class="modes-table">
+  <thead>
+    <tr>
+      <th style="width:38%">Decision point</th>
+      <th>Standard mode</th>
+      <th>Bob mode (custom)</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="decision">Spec contract content (case_ids, NFRs, threshold)</td>
+      <td><span class="mode-auto">agent drafts</span></td>
+      <td><span class="mode-auto">agent drafts</span></td>
+      <td>Always agent-drafted; humans don't write structured contracts from scratch.</td>
+    </tr>
+    <tr>
+      <td class="decision">Spec contract accepted</td>
+      <td><span class="mode-human">human</span></td>
+      <td><span class="mode-conditional">auto if calibration + risk OK</span></td>
+      <td>Bob auto-accepts when agent's per-capability calibration ≥ threshold and capability risk class is low/medium.</td>
+    </tr>
+    <tr>
+      <td class="decision">Feasibility analysis</td>
+      <td><span class="mode-auto">agent runs</span></td>
+      <td><span class="mode-auto">agent runs</span></td>
+      <td>Always agent-led. Output is the report.</td>
+    </tr>
+    <tr>
+      <td class="decision">Feasibility direction picked (code / no-code / human / hybrid)</td>
+      <td><span class="mode-human">human picks</span></td>
+      <td><span class="mode-conditional">auto if one path dominates</span></td>
+      <td>Bob auto-picks when one path wins by a declared margin (default 2× confidence delta).</td>
+    </tr>
+    <tr>
+      <td class="decision">Plan drafted</td>
+      <td><span class="mode-auto">agent drafts</span></td>
+      <td><span class="mode-auto">agent drafts</span></td>
+      <td>Always agent-drafted with challenge block.</td>
+    </tr>
+    <tr>
+      <td class="decision">Plan accepted</td>
+      <td><span class="mode-human">human</span></td>
+      <td><span class="mode-conditional">auto if calibration + risk OK</span></td>
+      <td>Mirrors the spec contract gate.</td>
+    </tr>
+    <tr>
+      <td class="decision">Implementation</td>
+      <td><span class="mode-auto">agent codes</span></td>
+      <td><span class="mode-auto">agent codes</span></td>
+      <td>Always agent. Human pairs/redirects but does not type the bulk.</td>
+    </tr>
+    <tr>
+      <td class="decision">Self-iteration loop (the separate game)</td>
+      <td><span class="mode-auto">agent runs</span></td>
+      <td><span class="mode-auto">agent runs</span></td>
+      <td>The QA pass on agent output. Never human in either mode.</td>
+    </tr>
+    <tr>
+      <td class="decision">Human review (dashboard-driven judgment)</td>
+      <td><span class="mode-human">human</span></td>
+      <td><span class="mode-human">human</span></td>
+      <td>Both modes. The dashboard is what makes review tractable.</td>
+    </tr>
+    <tr>
+      <td class="decision">Push to deploy</td>
+      <td><span class="mode-human">human always</span></td>
+      <td><span class="mode-conditional">auto for low-risk · human for high-risk</span></td>
+      <td>Bob auto-pushes only when (a) capability risk class ≤ medium, (b) self-iteration loop passed all four checks, (c) agent calibration ≥ threshold, (d) no reviewer-AI disagreements pending.</td>
+    </tr>
+    <tr>
+      <td class="decision">Session close (status, findings, scores)</td>
+      <td><span class="mode-auto">agent writes</span></td>
+      <td><span class="mode-auto">agent writes</span></td>
+      <td>Always agent. Bookkeeping is not a human job.</td>
+    </tr>
+    <tr>
+      <td class="decision">Penalty contestation</td>
+      <td><span class="mode-human">human</span></td>
+      <td><span class="mode-human">human</span></td>
+      <td>Always human. Contestation is a judgment about attribution, not a routine action.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="modes-callout">
+  <strong>Bob mode is not "AI runs the team."</strong> The two remaining human gates — dashboard review and push for high-risk — are the load-bearing ones. Bob mode removes the gates that were ceremony (typing-accept-into-CLI) and keeps the gates that are judgment. The point is to free human attention <em>for the decisions only humans should be making</em>, not to eliminate human responsibility.
+</div>
+
+<!-- 4. CI GATES -->
+<h2>4 · The five CI gates (mechanical, not social)</h2>
+<p class="lead">Compliance is adjudicated by the bot. The human reviewer is freed to focus on judgment. All five must pass before a reviewer is assigned.</p>
+<div class="gates">
+  <div class="gate-card">
+    <div class="gate-num">GATE 1</div>
+    <h4>Schema validation</h4>
+    <p>Every frontmatter block conforms to the JSON Schema bundled with the tool.</p>
+  </div>
+  <div class="gate-card">
+    <div class="gate-num">GATE 2</div>
+    <h4>Contract tests</h4>
+    <p>The capability's executable test suite passes. Cases by type: positive, negative, invariant, boundary, regression, performance, security, idempotence.</p>
+  </div>
+  <div class="gate-card">
+    <div class="gate-num">GATE 3</div>
+    <h4>Ownership disclosure</h4>
+    <p>PR template's checkboxes are populated. Named human owner is recorded.</p>
+  </div>
+  <div class="gate-card">
+    <div class="gate-num">GATE 4</div>
+    <h4>Protected paths</h4>
+    <p>Specs cannot be modified without the <code>spec-change</code> label. <code>do_not_modify</code> list is respected.</p>
+  </div>
+  <div class="gate-card">
+    <div class="gate-num">GATE 5 <span class="status active" style="margin-left:4px">v0.4</span></div>
+    <h4>Mutation threshold</h4>
+    <p>Capability's declared minimum mutation kill rate is met. Adapters: <code>mutmut</code>, <code>Stryker</code>, <code>pitest</code>. See §5a for the full timeline.</p>
+  </div>
+</div>
+
+<!-- 5. MEASUREMENT SUBSTRATE -->
+<h2>5 · The measurement substrate <span class="status active">v0.4 ACTIVE DEV</span></h2>
+<p class="lead">Three coupled mechanisms compose into a single framing metric. Every other discipline in the framework is graded by it. All three are in active development in v0.4 — the schemas, the data stores, and the CLI surfaces all exist; the field validation does not.</p>
+
+<div class="substrate">
+  <div class="substrate-mech">
+    <h3>Penalty bookkeeping</h3>
+    <p>Downstream costs (incidents, security findings, rollbacks, test rewrites) attribute back to the generating plan. Automated where possible (<code>git bisect</code>, SAST cross-reference, rollback records); contested cases get a 7-day patent-office-style review window. Normalized by risk class so engineers on high-stakes code aren't perversely penalized.</p>
+    <div class="data">writes to → plan.penalty_ledger<br/>rolls up into → signals.json<br/>CLI → sdd ledger ingest / contest</div>
+  </div>
+  <div class="substrate-mech">
+    <h3>Verification surface index</h3>
+    <p>Mutation kill rate is load-bearing. Every capability declares a minimum in its <code>spec.md</code> frontmatter. Mutation runs on every PR touching the capability. AI-generated tests that don't raise the kill rate are flagged (zero-kill flags). Used both as a hard CI gate AND a diagnostic for code review.</p>
+    <div class="data">tools → mutmut · Stryker · pitest<br/>writes to → signals.json<br/>CLI → sdd mutation</div>
+  </div>
+  <div class="substrate-mech">
+    <h3>Calibration tracking</h3>
+    <p>The plan schema's <code>confidence</code> and <code>outcome</code> fields are aggregated per agent, per capability, per change-class. <code>sdd calibration</code> surfaces curves. Sample-size normalized — a new tool with 10 plans isn't graded against a tool with 1000.</p>
+    <div class="data">reads → plan.confidence + plan.outcome<br/>writes to → signals.json<br/>CLI → sdd calibration</div>
+  </div>
+</div>
+
+<div class="net-velocity">
+  <div class="label">FRAMING METRIC · COMPUTED FROM signals.json</div>
+  <div class="formula">Net Velocity = output rate × verification surface × calibration accuracy ÷ penalty accrual</div>
+</div>
+<p class="annotation" style="margin-top:8px">Not a score to optimize. A dashboard to read. Five plans with 90% mutation kill / 0 reverts / 0 calibration failures beat twenty plans with 60% kill / 3 reverts / 2 calibration failures. The first is paying its bills; the second is racking up debt that the team will service later.</p>
+
+<!-- 5a. MUTATION TESTING TIMELINE -->
+<h3 style="margin-top:32px">5a · Mutation testing — when it runs and what it does <span class="status active">v0.4</span></h3>
+<p>Mutation testing fires at three distinct moments in the workflow, each playing a different role. The same data feeds both the CI gate and the diagnostic view for code review.</p>
+
+<div class="panel">
+  <div class="tl-row">
+    <div class="tl-when active">PRE-PR</div>
+    <div class="tl-event">
+      <h4>sdd validate runs locally</h4>
+      <p>The engineer runs <code>sdd validate</code> before opening the PR. Mutation adapter runs against changed files; if the capability's declared kill-rate threshold is missed, validation exits non-zero locally. The engineer sees the surviving mutants <em>before</em> sending the PR to review, with enough time to add boundary or error-path tests.</p>
+    </div>
+  </div>
+  <div class="tl-row">
+    <div class="tl-when active">CI · GATE 5</div>
+    <div class="tl-event">
+      <h4>Mutation threshold gate in GitHub Actions</h4>
+      <p>The same adapter runs on the CI runner. PRs that drop the kill rate below the declared minimum fail CI. No human reviewer is assigned until this gate passes. Results are written to <code>signals.json</code> for the capability's trajectory.</p>
+    </div>
+  </div>
+  <div class="tl-row">
+    <div class="tl-when active">PR REVIEW</div>
+    <div class="tl-event">
+      <h4>Mutation diagnostic (the reviewer view)</h4>
+      <p>The reviewer sees, alongside the diff: <strong>mutation diff</strong> (new surviving / resurrected / killed mutants for this PR), <strong>capability kill-rate trajectory</strong> over the rolling window, <strong>test additions with kills-per-test</strong> (zero-kill tests highlighted as presumptively redundant), and <strong>equivalent-mutant flags</strong> needing verification. Attention is mechanically routed to the parts of the change the test suite does not defend.</p>
+    </div>
+  </div>
+  <div class="tl-row">
+    <div class="tl-when">CONTINUOUS</div>
+    <div class="tl-event">
+      <h4>Drift detection in sdd doctor</h4>
+      <p>A capability whose kill rate drifts from 87% → 73% over a quarter is a leading indicator of spec rot. The framework tracks per-capability mutation kill rate over time in <code>signals.json</code> and surfaces the trajectory in <code>sdd doctor</code>. Stability of kill rate while complexity rises is paradoxically suspicious: the new code is not being challenged.</p>
+    </div>
+  </div>
+</div>
+
+<!-- 5b. PENALTY LEDGER TIMELINE -->
+<h3 style="margin-top:32px">5b · Penalty ledger — the 90-day post-merge timeline <span class="status active">v0.4</span></h3>
+<p>Once a plan reaches <code>status: executed</code>, the framework opens its 90-day penalty horizon. Downstream events are attributed automatically where possible, with structured contestation for ambiguous cases.</p>
+
+<div class="panel">
+  <div class="tl-row">
+    <div class="tl-when merge">DAY 0</div>
+    <div class="tl-event">
+      <h4>Merge — outcome recorded</h4>
+      <p><code>sdd plan outcome --id &lt;plan&gt; --outcome success|partial|failure</code>. Penalty horizon opens. The <code>penalty_ledger</code> block on the plan is initialized to empty.</p>
+    </div>
+  </div>
+  <div class="tl-row">
+    <div class="tl-when">DAY 1–90</div>
+    <div class="tl-event">
+      <h4>Automated attribution</h4>
+      <p>As downstream events occur, the framework attributes them to plans:
+        <span class="badge framework">bug fixes</span> via <code>git bisect</code>,
+        <span class="badge framework">security findings</span> via SAST output cross-reference,
+        <span class="badge framework">rollbacks</span> via the existing changeset record,
+        <span class="badge framework">customer escalations</span> via incident-link tagging.
+        Each event appends to the plan's <code>penalty_ledger</code> block, with severity, risk-class multiplier, accrued value, and contestation flag.</p>
+    </div>
+  </div>
+  <div class="tl-row">
+    <div class="tl-when">DAY 0+7</div>
+    <div class="tl-event">
+      <h4>Contestation window (per event)</h4>
+      <p>For each attributed event, the originator may dispute within 7 days. Disputes go to a third-party reviewer modeled on patent-office opposition procedure. After 7 days the attribution is final unless contested.</p>
+    </div>
+  </div>
+  <div class="tl-row">
+    <div class="tl-when">DAY 30+</div>
+    <div class="tl-event">
+      <h4>Calibration curves regenerated</h4>
+      <p>Per-agent calibration curves in <code>signals.json</code> are recomputed weekly from the rolling window of (confidence, outcome, penalty) triples. <code>sdd calibration --agent &lt;handle&gt;</code> surfaces the curve. Mis-calibrated agents have their confidence allowance discounted on future plans.</p>
+    </div>
+  </div>
+  <div class="tl-row">
+    <div class="tl-when">DAY 90</div>
+    <div class="tl-event">
+      <h4>Penalty horizon closes</h4>
+      <p>The plan's ledger freezes. Events attributed after day 90 are recorded as <em>historical context</em> on the capability but do not accrue against the plan itself. The 90-day default is configurable per-capability for products with longer or shorter feedback loops.</p>
+    </div>
+  </div>
+</div>
+
+<p class="annotation" style="margin-top:12px">Gaming surfaces and their mitigations: <strong>avoidance of hard problems</strong> mitigated by risk-class normalization (high-stakes systems carry smaller multipliers); <strong>mis-attribution</strong> mitigated by 7-day contestation; <strong>discouraging exploration</strong> mitigated by a separate <code>probe</code> track where accrual is suppressed; <strong>bureaucratic overhead</strong> mitigated by automating attribution wherever bisect or change-impact analysis can do the work.</p>
+
+<!-- 6. WIKI / KNOWLEDGE FLOW -->
+<h2>6 · The LLM ↔ Wiki reading map <span class="status shipped">v0.3 SHIPPED</span></h2>
+<p class="lead">The <code>.governance/wiki/</code> tree is the team's institutional knowledge. An AI session reads from it selectively (via MCP), can only write back through two narrow channels (plan draft, suspected finding), and is mechanically blocked from authoring anything else. Knowledge accumulates instead of being re-derived every session.</p>
+
+<div class="wiki-map">
+  <div class="wiki-side reads">
+    <div class="label">↓ AI READS (via MCP server)</div>
+    <h3 style="margin:0 0 12px;color:var(--ai)">What the LLM consumes</h3>
+    <div class="item">
+      <div><div class="path">AGENTS.md</div><div style="font-size:11px;color:var(--text-muted)">canonical AI rules, auto-loaded</div></div>
+      <div class="via">auto-load at session start</div>
+    </div>
+    <div class="item">
+      <div><div class="path">progress.md</div><div style="font-size:11px;color:var(--text-muted)">token-efficient session-state snapshot</div></div>
+      <div class="via">get_progress()</div>
+    </div>
+    <div class="item">
+      <div><div class="path">wiki/principles.md</div><div style="font-size:11px;color:var(--text-muted)">six principles · background context</div></div>
+      <div class="via">get_principles()</div>
+    </div>
+    <div class="item">
+      <div><div class="path">wiki/coding-standards.md</div><div style="font-size:11px;color:var(--text-muted)">tribal patterns: errors, logs, naming</div></div>
+      <div class="via">get_coding_standards()</div>
+    </div>
+    <div class="item">
+      <div><div class="path">capabilities/&lt;id&gt;/spec.md</div><div style="font-size:11px;color:var(--text-muted)">parent capability spec for the task</div></div>
+      <div class="via">get_spec(capability)</div>
+    </div>
+    <div class="item">
+      <div><div class="path">wiki/findings/*.md</div><div style="font-size:11px;color:var(--text-muted)">prior team learnings · filtered by capability + tag</div></div>
+      <div class="via">list_findings(cap, tag)</div>
+    </div>
+    <div class="item">
+      <div><div class="path">capabilities/REGISTRY.yaml</div><div style="font-size:11px;color:var(--text-muted)">active + roadmap + deprecated capabilities</div></div>
+      <div class="via">get_capability_registry()</div>
+    </div>
+    <div class="item">
+      <div><div class="path">arch_spec.md</div><div style="font-size:11px;color:var(--text-muted)">whole-system architecture</div></div>
+      <div class="via">get_arch_spec()</div>
+    </div>
+    <p class="annotation" style="margin-top:8px">Selective. The LLM does not load the whole <code>.governance/</code> tree — that is the §2.9 token-bloat anti-pattern. Each MCP call is scoped to the immediate task.</p>
+  </div>
+
+  <div class="wiki-side writes">
+    <div class="label">↑ AI WRITES (only via these two channels)</div>
+    <h3 style="margin:0 0 12px;color:var(--human)">What the LLM may produce</h3>
+    <div class="item">
+      <div><div class="path">plan/&lt;task&gt;.plan.md</div><div style="font-size:11px;color:var(--text-muted)">as <code>status: draft</code> only · must include challenge block</div></div>
+      <div class="via">propose_plan()</div>
+    </div>
+    <div class="item">
+      <div><div class="path">wiki/findings/&lt;id&gt;.md</div><div style="font-size:11px;color:var(--text-muted)">as <code>status: suspected</code> only · human confirms</div></div>
+      <div class="via">suggest_finding()</div>
+    </div>
+
+    <h3 style="margin:24px 0 8px;color:var(--fail);font-size:14px">Mechanically forbidden to AI</h3>
+    <div class="item" style="background:#FDF1F1">
+      <div><div class="path" style="text-decoration:line-through">accept_plan</div><div style="font-size:11px;color:var(--text-muted)">MCP surface has no such tool · acceptance is human-only CLI</div></div>
+      <div class="via" style="color:var(--fail)">REFUSED</div>
+    </div>
+    <div class="item" style="background:#FDF1F1">
+      <div><div class="path" style="text-decoration:line-through">edit principles.md</div><div style="font-size:11px;color:var(--text-muted)">schema rejects AI handle in authored_by</div></div>
+      <div class="via" style="color:var(--fail)">REFUSED</div>
+    </div>
+    <div class="item" style="background:#FDF1F1">
+      <div><div class="path" style="text-decoration:line-through">edit spec.md</div><div style="font-size:11px;color:var(--text-muted)">protected-paths CI check; plan.do_not_modify list</div></div>
+      <div class="via" style="color:var(--fail)">REFUSED</div>
+    </div>
+    <div class="item" style="background:#FDF1F1">
+      <div><div class="path" style="text-decoration:line-through">edit coding-standards.md</div><div style="font-size:11px;color:var(--text-muted)">human-owned · same protected-paths gate</div></div>
+      <div class="via" style="color:var(--fail)">REFUSED</div>
+    </div>
+    <div class="item" style="background:#FDF1F1">
+      <div><div class="path" style="text-decoration:line-through">confirm finding</div><div style="font-size:11px;color:var(--text-muted)">AI can only file as suspected; confirmation requires human</div></div>
+      <div class="via" style="color:var(--fail)">REFUSED</div>
+    </div>
+  </div>
+</div>
+
+<h3 style="margin-top:24px">6a · The findings lifecycle</h3>
+<p>The findings/ subdirectory is the only place where AI contributions enter the wiki. The lifecycle is three states: suspected (AI-filed) → confirmed (human-validated) → surfaced (resurfaced to future sessions via MCP). This is the channel that converts AI-discovered gotchas into team-owned institutional knowledge.</p>
+
+<div class="wiki-flow">
+  <div class="wiki-node" style="border-color:var(--ai)">
+    <div class="label">findings/&lt;id&gt;.md</div>
+    <div class="name">Suspected</div>
+    <div class="who" style="color:var(--ai)">AI files via suggest_finding()</div>
+  </div>
+  <div class="wiki-arrow">→</div>
+  <div class="wiki-node" style="border-color:var(--human)">
+    <div class="label">sdd findings confirm</div>
+    <div class="name">Confirmed</div>
+    <div class="who" style="color:var(--human)">human runs CLI · status flips</div>
+  </div>
+  <div class="wiki-arrow">→</div>
+  <div class="wiki-node" style="border-color:var(--measure)">
+    <div class="label">list_findings(cap, tag)</div>
+    <div class="name">Surfaced</div>
+    <div class="who" style="color:var(--measure)">auto-loaded by future AI sessions</div>
+  </div>
+</div>
+<p class="annotation" style="margin-top:12px">A typical example: an AI session implementing rate limiting on <code>/signup</code> hits a Redis flapping issue during a deploy; the engineer asks the AI to file it; the AI saves the entry to the wiki as <code>status: suspected</code>; the engineer confirms with <code>sdd wiki confirm</code>; six months later, a different AI session on a different rate-limit task auto-loads the same entry via <code>list_wiki(capability='users', tag='rate-limit')</code> and adopts the connection-pool warmup pattern from the start. Tribal knowledge stops being tribal.</p>
+
+<!-- 6b. GLOBAL LLM-WIKI -->
+<h2>6b · The global LLM-wiki — cross-project, organization-wide <span class="status planned">v0.5</span></h2>
+<p class="lead">The <code>.governance/wiki/</code> inside each repo is the <strong>project-local</strong> wiki — team-specific gotchas, findings, capability specs. Above it sits the <strong>global LLM-wiki</strong>: a cross-project, organization-wide knowledge layer that every team's agents read from. The global wiki holds the patterns, principles, and templates that survive any single project's lifetime. Same access discipline as the project wiki: agents may read freely, may suggest entries into <code>inbox/</code>, and may not author the curated layers without human confirmation.</p>
+
+<div class="wiki-map">
+  <div class="wiki-side reads">
+    <div class="label">↓ Global llm-wiki structure</div>
+    <h3 style="margin:0 0 12px;color:var(--ai)">Six top-level directories</h3>
+<div class="tree" style="white-space:pre">llm-wiki/
+  <span class="dir">_templates/</span>     <span class="comment"># starter scaffolds: contracts, plans, specs, finding entries</span>
+  <span class="dir">projects/</span>       <span class="comment"># cross-team project bridges, retrospectives, decisions</span>
+  <span class="dir">research/</span>       <span class="comment"># research notes, position papers, hypothesis logs</span>
+  <span class="dir">reference/</span>      <span class="comment"># design principles · design patterns · golden examples</span>
+  <span class="dir">meetings/</span>       <span class="comment"># meeting notes, action items, decisions of record</span>
+  <span class="dir">inbox/</span>          <span class="comment"># unsorted bootstrap content awaiting categorization</span></div>
+    <p class="annotation" style="margin-top:8px">An entry matures through promotion: lands in <code>inbox/</code>, gets reviewed and lifted into <code>research/</code> or <code>meetings/</code>, and — once it has earned canonical status — moves to <code>reference/</code>. The promotion path is itself a kind of mortality discipline for knowledge: entries that are not promoted within a horizon get archived.</p>
+  </div>
+  <div class="wiki-side writes">
+    <div class="label">↑ Content categories the agent reads</div>
+    <h3 style="margin:0 0 12px;color:var(--human)">What lives in there</h3>
+    <ul style="margin:0;font-size:13px;color:var(--text);padding-left:18px;line-height:1.6">
+      <li><strong>Design principles</strong> — cross-cutting commitments (e.g., "no unbounded loops in user-facing paths", "every external call has a timeout and a retry policy") that hold across many projects. Background context loaded at session start. Lives in <code>reference/principles/</code>.</li>
+      <li><strong>Design patterns</strong> — named, reusable solutions (the connection-pool-warmup pattern, the circuit-breaker pattern as the team practices it, the idempotency-key shape). The agent fetches a named pattern by reference. Lives in <code>reference/patterns/</code>.</li>
+      <li><strong>Golden examples</strong> — canonical implementations of common shapes: auth handler, rate limiter, idempotency key, audit-log writer, structured-error response. The agent uses these as starting templates instead of re-deriving. Lives in <code>reference/golden/</code>.</li>
+      <li><strong>Bootstraps</strong> — starter content for new projects: the template <code>.governance/</code> tree, template <code>AGENTS.md</code>, template contract/plan scaffolds. Reduces cold-start time for new repos. Lives in <code>_templates/bootstrap/</code>.</li>
+      <li><strong>Meeting notes &amp; decisions of record</strong> — institutional decisions that hold across the org (architecture review outcomes, security committee rulings). Loaded selectively when a contract or plan needs to align with an existing decision. Lives in <code>meetings/</code>.</li>
+      <li><strong>Research</strong> — position papers, hypothesis logs, research charters (the SDD++ research program itself is a research entry). Loaded when the agent needs to know <em>why</em> a discipline exists, not just what it is. Lives in <code>research/</code>.</li>
+    </ul>
+  </div>
+</div>
+
+<p class="annotation" style="margin-top:12px"><strong>Project-local vs global:</strong> the project-local <code>.governance/wiki/findings/</code> holds team-specific gotchas tied to a particular codebase. The global <code>llm-wiki/reference/</code> holds patterns and principles that survive any single team. A pattern matures by being noticed in a project's findings, promoted to the global <code>inbox/</code> when it looks reusable, reviewed into <code>research/</code> when it's been tested by a second team, and finally landing in <code>reference/</code> as a canonical pattern. This is how organizational knowledge climbs out of any single repo.</p>
+
+<!-- 7. AI ↔ HUMAN AUTHORITY MATRIX -->
+<h2>7 · Authority matrix — what AI can do, what humans must do</h2>
+<p class="lead">The MCP tool surface and the schema together enforce the boundary. AI cannot accept its own plans; AI cannot author specs; AI can suggest findings only as <code>suspected</code>. Mechanical, not social.</p>
+<table class="matrix">
+  <thead>
+    <tr><th style="width:38%">Action</th><th>AI</th><th>Human</th><th>Mechanism</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="action">Author <code>principles.md</code></td><td class="cannot">✗</td><td class="can">✓</td><td>Schema rejects AI handle in <code>authored_by.human</code></td></tr>
+    <tr><td class="action">Author <code>coding-standards.md</code></td><td class="cannot">✗</td><td class="can">✓</td><td>Same schema gate</td></tr>
+    <tr><td class="action">Author capability <code>spec.md</code></td><td class="cannot">✗</td><td class="can">✓</td><td>Same schema gate; protected-paths CI check</td></tr>
+    <tr><td class="action">Draft plan</td><td class="can">✓</td><td class="can">✓</td><td><code>propose_plan</code> MCP tool saves as <code>draft</code> only</td></tr>
+    <tr><td class="action">Populate challenge block</td><td class="can">✓</td><td class="can">✓</td><td>Schema requires non-empty concerns + alternatives</td></tr>
+    <tr><td class="action">Accept plan</td><td class="cannot">✗</td><td class="can">✓</td><td><code>sdd plan accept --by @&lt;handle&gt;</code> CLI-only; MCP has no equivalent tool</td></tr>
+    <tr><td class="action">File finding</td><td class="partial">~</td><td class="can">✓</td><td>AI may file as <code>status: suspected</code> only; human confirms</td></tr>
+    <tr><td class="action">Read findings, specs, standards</td><td class="can">✓</td><td class="can">✓</td><td>MCP tools: <code>list_findings</code>, <code>get_spec</code>, <code>get_progress</code></td></tr>
+    <tr><td class="action">Implement code</td><td class="can">✓</td><td class="can">✓</td><td>Constrained by plan's <code>do_not_modify</code> list</td></tr>
+    <tr><td class="action">Write tests</td><td class="can">✓</td><td class="can">✓</td><td>Bound to named <code>case_id</code>s; mutation gate validates the tests defend the spec</td></tr>
+    <tr><td class="action">Sign PR ownership statement</td><td class="cannot">✗</td><td class="can">✓</td><td>PR template + ownership-disclosure CI check</td></tr>
+    <tr><td class="action">Record plan outcome</td><td class="cannot">✗</td><td class="can">✓</td><td><code>sdd plan outcome</code> CLI-only</td></tr>
+    <tr><td class="action">Contest penalty attribution</td><td class="cannot">✗</td><td class="can">✓</td><td>Originator may dispute within 7-day window; human reviewer adjudicates</td></tr>
+  </tbody>
+</table>
+
+<!-- 8. MCP INTEGRATION -->
+<h2>8 · MCP integration — how AI sessions actually connect</h2>
+<p class="lead">SDD++ exposes itself to AI assistants via the Model Context Protocol. Cursor, Claude Code, Copilot, and Aider all auto-load <code>AGENTS.md</code> at session start and connect to the <code>sdd serve</code> MCP server for token-efficient tool access.</p>
+<div class="mcp-diagram">
+  <div class="mcp-node ai">
+    <h4>AI assistant</h4>
+    <p>Cursor / Claude Code / Copilot / Aider</p>
+  </div>
+  <div class="mcp-arrow" style="text-align:center">
+    <svg width="40" height="20" viewBox="0 0 40 20"><line x1="0" y1="10" x2="32" y2="10" stroke="#5C5C5C" stroke-width="1.5"/><polygon points="32,4 40,10 32,16" fill="#5C5C5C"/></svg>
+  </div>
+  <div class="mcp-node server">
+    <h4>sdd serve (MCP server)</h4>
+    <p>14 tools · stdio transport</p>
+  </div>
+  <div class="mcp-arrow" style="text-align:center">
+    <svg width="40" height="20" viewBox="0 0 40 20"><line x1="0" y1="10" x2="32" y2="10" stroke="#5C5C5C" stroke-width="1.5"/><polygon points="32,4 40,10 32,16" fill="#5C5C5C"/></svg>
+  </div>
+  <div class="mcp-node repo">
+    <h4>.governance/</h4>
+    <p>The repo's governance tree</p>
+  </div>
+</div>
+<div class="mcp-tools">
+  <p style="margin:0 0 8px"><strong>Available MCP tools</strong> (load-bearing subset):</p>
+  <span class="tool">get_progress</span>
+  <span class="tool">list_findings(capability=…)</span>
+  <span class="tool">get_spec(capability=…)</span>
+  <span class="tool">propose_plan</span>
+  <span class="tool">record_progress</span>
+  <span class="tool">record_session_end</span>
+  <span class="tool">suggest_finding</span>
+  <span class="tool">get_capability_registry</span>
+  <span class="tool">get_coding_standards</span>
+  <span class="tool no-accept">accept_plan</span>
+  <p class="annotation" style="margin-top:8px">The <code>accept_plan</code> tool deliberately does not exist. AI cannot accept its own plans. Acceptance is a human-only CLI operation: <code>sdd plan accept --id &lt;plan&gt; --by @&lt;handle&gt;</code>.</p>
+</div>
+
+<!-- 9. SESSION LIFECYCLE -->
+<h2>9 · A single AI session, end to end</h2>
+<p class="lead">The eight-step agent-led lifecycle from §3, projected as a swim-lane. Three lanes: the <strong>AI assistant</strong> (top), the <strong>MCP server</strong> in the middle, and a combined <strong>wiki + repo</strong> lane at the bottom. The wiki lane distinguishes <span style="color:var(--measure);font-weight:600">global llm-wiki</span> sources (cross-project, read for principles · patterns · golden examples) from <span style="color:var(--human);font-weight:600">project-local <code>.governance/</code></span> artifacts (the agent's writes land here). New v0.4 MCP tools are marked in gold.</p>
+<div class="svg-wrap">
+<svg viewBox="0 0 1560 600" width="100%" xmlns="http://www.w3.org/2000/svg" style="font-family:var(--sans);font-size:11px">
+  <!-- Lane labels and separators -->
+  <text x="20" y="22" font-size="10" fill="#8A8780" font-weight="700" letter-spacing="0.05em">AI ASSISTANT</text>
+  <line x1="20" y1="34" x2="1540" y2="34" stroke="#E8E5DE" stroke-width="1"/>
+  <text x="20" y="180" font-size="10" fill="#8A8780" font-weight="700" letter-spacing="0.05em">MCP SERVER (sdd serve)</text>
+  <line x1="20" y1="192" x2="1540" y2="192" stroke="#E8E5DE" stroke-width="1"/>
+  <text x="20" y="375" font-size="10" fill="#8A8780" font-weight="700" letter-spacing="0.05em">WIKI + REPO</text>
+  <text x="120" y="375" font-size="9" fill="#6B5B95" font-weight="600">— global llm-wiki (read)</text>
+  <text x="278" y="375" font-size="9" fill="#B5651D" font-weight="600">— project .governance/ (read + write)</text>
+  <line x1="20" y1="387" x2="1540" y2="387" stroke="#E8E5DE" stroke-width="1"/>
+
+  <!-- AI lane boxes: 8 steps -->
+  <!-- 1. Session start -->
+  <rect x="20" y="50" width="170" height="80" rx="4" fill="#E2EAEE" stroke="#4A6B7C" stroke-width="1"/>
+  <text x="105" y="73" text-anchor="middle" font-weight="700" fill="#4A6B7C">1 · Session start</text>
+  <text x="105" y="92" text-anchor="middle" fill="#5C5C5C" font-size="10">AGENTS.md auto-loaded</text>
+  <text x="105" y="108" text-anchor="middle" fill="#5C5C5C" font-size="10">progress.md available</text>
+  <text x="105" y="122" text-anchor="middle" fill="#5C5C5C" font-size="10">+ global llm-wiki ref</text>
+
+  <!-- 2. Load context -->
+  <rect x="210" y="50" width="170" height="80" rx="4" fill="#E2EAEE" stroke="#4A6B7C" stroke-width="1"/>
+  <text x="295" y="73" text-anchor="middle" font-weight="700" fill="#4A6B7C">2 · Load context</text>
+  <text x="295" y="92" text-anchor="middle" fill="#5C5C5C" font-size="10">selective MCP reads</text>
+  <text x="295" y="108" text-anchor="middle" fill="#5C5C5C" font-size="10">no whole-tree dump</text>
+  <text x="295" y="122" text-anchor="middle" fill="#5C5C5C" font-size="10">global + project wiki</text>
+
+  <!-- 3. Draft contract -->
+  <rect x="400" y="50" width="170" height="80" rx="4" fill="#E2EAEE" stroke="#4A6B7C" stroke-width="1"/>
+  <text x="485" y="73" text-anchor="middle" font-weight="700" fill="#4A6B7C">3 · Draft contract</text>
+  <text x="485" y="92" text-anchor="middle" fill="#5C5C5C" font-size="10">structured spec contract</text>
+  <text x="485" y="108" text-anchor="middle" fill="#5C5C5C" font-size="10">cases · NFRs · threshold</text>
+  <text x="485" y="122" text-anchor="middle" fill="#5C5C5C" font-size="10">schema-validated</text>
+
+  <!-- 4. Feasibility -->
+  <rect x="590" y="50" width="170" height="80" rx="4" fill="#E2EAEE" stroke="#4A6B7C" stroke-width="1"/>
+  <text x="675" y="73" text-anchor="middle" font-weight="700" fill="#4A6B7C">4 · Feasibility</text>
+  <text x="675" y="92" text-anchor="middle" fill="#5C5C5C" font-size="10">code · no-code · human</text>
+  <text x="675" y="108" text-anchor="middle" fill="#5C5C5C" font-size="10">checks REGISTRY</text>
+  <text x="675" y="122" text-anchor="middle" fill="#5C5C5C" font-size="10">+ golden examples</text>
+
+  <!-- 5. Draft plan -->
+  <rect x="780" y="50" width="170" height="80" rx="4" fill="#E2EAEE" stroke="#4A6B7C" stroke-width="1"/>
+  <text x="865" y="73" text-anchor="middle" font-weight="700" fill="#4A6B7C">5 · Draft plan</text>
+  <text x="865" y="92" text-anchor="middle" fill="#5C5C5C" font-size="10">challenge block:</text>
+  <text x="865" y="108" text-anchor="middle" fill="#5C5C5C" font-size="10">+ causal_attribution</text>
+  <text x="865" y="122" text-anchor="middle" fill="#5C5C5C" font-size="10">+ trajectory_argument</text>
+
+  <!-- 6. Implement -->
+  <rect x="970" y="50" width="170" height="80" rx="4" fill="#E2EAEE" stroke="#4A6B7C" stroke-width="1"/>
+  <text x="1055" y="73" text-anchor="middle" font-weight="700" fill="#4A6B7C">6 · Implement</text>
+  <text x="1055" y="92" text-anchor="middle" fill="#5C5C5C" font-size="10">code + tests</text>
+  <text x="1055" y="108" text-anchor="middle" fill="#5C5C5C" font-size="10">bounded by</text>
+  <text x="1055" y="122" text-anchor="middle" fill="#5C5C5C" font-size="10">do_not_modify</text>
+
+  <!-- 7. Self-iterate -->
+  <rect x="1160" y="50" width="170" height="80" rx="4" fill="#ECE8F2" stroke="#6B5B95" stroke-width="1.5"/>
+  <text x="1245" y="73" text-anchor="middle" font-weight="700" fill="#6B5B95">7 · Self-iterate  ↻</text>
+  <text x="1245" y="92" text-anchor="middle" fill="#5C5C5C" font-size="10">the separate game</text>
+  <text x="1245" y="108" text-anchor="middle" fill="#5C5C5C" font-size="10">mutation + penalty</text>
+  <text x="1245" y="122" text-anchor="middle" fill="#5C5C5C" font-size="10">+ author/reviewer</text>
+
+  <!-- 8. Session close -->
+  <rect x="1350" y="50" width="170" height="80" rx="4" fill="#E2EAEE" stroke="#4A6B7C" stroke-width="1"/>
+  <text x="1435" y="73" text-anchor="middle" font-weight="700" fill="#4A6B7C">8 · Session close</text>
+  <text x="1435" y="92" text-anchor="middle" fill="#5C5C5C" font-size="10">status + wiki entry</text>
+  <text x="1435" y="108" text-anchor="middle" fill="#5C5C5C" font-size="10">+ score for analysis</text>
+  <text x="1435" y="122" text-anchor="middle" fill="#5C5C5C" font-size="10">all via MCP</text>
+
+  <!-- AI lane connecting arrows -->
+  <line x1="190" y1="90" x2="208" y2="90" stroke="#4A6B7C" stroke-width="1.5"/><polygon points="208,86 216,90 208,94" fill="#4A6B7C"/>
+  <line x1="380" y1="90" x2="398" y2="90" stroke="#4A6B7C" stroke-width="1.5"/><polygon points="398,86 406,90 398,94" fill="#4A6B7C"/>
+  <line x1="570" y1="90" x2="588" y2="90" stroke="#4A6B7C" stroke-width="1.5"/><polygon points="588,86 596,90 588,94" fill="#4A6B7C"/>
+  <line x1="760" y1="90" x2="778" y2="90" stroke="#4A6B7C" stroke-width="1.5"/><polygon points="778,86 786,90 778,94" fill="#4A6B7C"/>
+  <line x1="950" y1="90" x2="968" y2="90" stroke="#4A6B7C" stroke-width="1.5"/><polygon points="968,86 976,90 968,94" fill="#4A6B7C"/>
+  <line x1="1140" y1="90" x2="1158" y2="90" stroke="#4A6B7C" stroke-width="1.5"/><polygon points="1158,86 1166,90 1158,94" fill="#4A6B7C"/>
+  <line x1="1330" y1="90" x2="1348" y2="90" stroke="#4A6B7C" stroke-width="1.5"/><polygon points="1348,86 1356,90 1348,94" fill="#4A6B7C"/>
+
+  <!-- Self-iterate loop indicator -->
+  <path d="M 1245 130 Q 1245 175 1180 175" stroke="#6B5B95" stroke-width="1.5" fill="none" stroke-dasharray="4,3"/>
+  <path d="M 1180 175 Q 1080 175 1080 130" stroke="#6B5B95" stroke-width="1.5" fill="none" stroke-dasharray="4,3"/>
+  <polygon points="1076,134 1080,126 1084,134" fill="#6B5B95"/>
+  <text x="1160" y="170" text-anchor="middle" font-size="9" fill="#6B5B95" font-style="italic">loops on threshold miss</text>
+
+  <!-- MCP lane boxes -->
+  <!-- Step 2: load context tools -->
+  <rect x="210" y="200" width="170" height="28" rx="4" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="1"/>
+  <text x="295" y="218" text-anchor="middle" font-family="var(--mono)" font-size="10">get_progress()</text>
+  <rect x="210" y="232" width="170" height="28" rx="4" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="1"/>
+  <text x="295" y="250" text-anchor="middle" font-family="var(--mono)" font-size="10">list_wiki(cap, tag)</text>
+  <rect x="210" y="264" width="170" height="28" rx="4" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="1"/>
+  <text x="295" y="282" text-anchor="middle" font-family="var(--mono)" font-size="10">get_spec(cap)</text>
+  <rect x="210" y="296" width="170" height="28" rx="4" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="1"/>
+  <text x="295" y="314" text-anchor="middle" font-family="var(--mono)" font-size="10">get_principles()</text>
+
+  <!-- Step 3: propose_contract (v0.4 new) -->
+  <rect x="400" y="200" width="170" height="36" rx="4" fill="#FFF6E0" stroke="#C9A227" stroke-width="1.5"/>
+  <text x="485" y="218" text-anchor="middle" font-family="var(--mono)" font-size="10">propose_contract()</text>
+  <text x="485" y="231" text-anchor="middle" font-family="var(--mono)" font-size="9" fill="#8A6B0F">NEW v0.4</text>
+
+  <!-- Step 4: registry + golden -->
+  <rect x="590" y="200" width="170" height="28" rx="4" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="1"/>
+  <text x="675" y="218" text-anchor="middle" font-family="var(--mono)" font-size="10">get_capability_registry()</text>
+  <rect x="590" y="232" width="170" height="28" rx="4" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="1"/>
+  <text x="675" y="250" text-anchor="middle" font-family="var(--mono)" font-size="10">get_golden(name)</text>
+  <rect x="590" y="264" width="170" height="28" rx="4" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="1"/>
+  <text x="675" y="282" text-anchor="middle" font-family="var(--mono)" font-size="10">get_pattern(name)</text>
+
+  <!-- Step 5: propose_plan -->
+  <rect x="780" y="200" width="170" height="28" rx="4" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="1"/>
+  <text x="865" y="218" text-anchor="middle" font-family="var(--mono)" font-size="10">propose_plan()</text>
+  <text x="865" y="244" text-anchor="middle" font-size="9" fill="#8A8780" font-style="italic">with 6-field challenge</text>
+
+  <!-- Step 6: direct write to repo (no MCP) -->
+  <rect x="970" y="200" width="170" height="36" rx="4" fill="#F2F0E9" stroke="#C9C5BD" stroke-width="1" stroke-dasharray="3,3"/>
+  <text x="1055" y="218" text-anchor="middle" font-size="10" fill="#8A8780">direct filesystem</text>
+  <text x="1055" y="231" text-anchor="middle" font-size="9" fill="#8A8780">(no MCP for code writes)</text>
+
+  <!-- Step 7: CLI tools (sdd) -->
+  <rect x="1160" y="200" width="170" height="28" rx="4" fill="#F2F0E9" stroke="#C9C5BD" stroke-width="1" stroke-dasharray="3,3"/>
+  <text x="1245" y="218" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="#5C5C5C">sdd validate (contract+plan)</text>
+  <rect x="1160" y="232" width="170" height="28" rx="4" fill="#F2F0E9" stroke="#C9C5BD" stroke-width="1" stroke-dasharray="3,3"/>
+  <text x="1245" y="250" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="#5C5C5C">sdd mutation</text>
+  <rect x="1160" y="264" width="170" height="28" rx="4" fill="#F2F0E9" stroke="#C9C5BD" stroke-width="1" stroke-dasharray="3,3"/>
+  <text x="1245" y="282" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="#5C5C5C">sdd ledger preview</text>
+
+  <!-- Step 8: session close tools -->
+  <rect x="1350" y="200" width="170" height="28" rx="4" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="1"/>
+  <text x="1435" y="218" text-anchor="middle" font-family="var(--mono)" font-size="10">record_progress()</text>
+  <rect x="1350" y="232" width="170" height="28" rx="4" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="1"/>
+  <text x="1435" y="250" text-anchor="middle" font-family="var(--mono)" font-size="10">suggest_wiki_entry()</text>
+  <rect x="1350" y="264" width="170" height="28" rx="4" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="1"/>
+  <text x="1435" y="282" text-anchor="middle" font-family="var(--mono)" font-size="10">record_outcome()</text>
+  <rect x="1350" y="296" width="170" height="28" rx="4" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="1"/>
+  <text x="1435" y="314" text-anchor="middle" font-family="var(--mono)" font-size="10">record_session_end()</text>
+
+  <!-- Wiki + Repo lane boxes -->
+  <!-- Step 2: reads — global wiki + project wiki -->
+  <rect x="210" y="395" width="170" height="80" rx="4" fill="#ECE8F2" stroke="#6B5B95" stroke-width="1" stroke-dasharray="3,3"/>
+  <text x="295" y="412" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="#6B5B95">llm-wiki/reference/</text>
+  <text x="295" y="426" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="#6B5B95">llm-wiki/_templates/</text>
+  <text x="295" y="442" text-anchor="middle" font-size="9" fill="#5C5C5C">GLOBAL · read</text>
+  <text x="295" y="458" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="#B5651D">.governance/wiki/*</text>
+  <text x="295" y="472" text-anchor="middle" font-size="9" fill="#5C5C5C">project · read</text>
+
+  <!-- Step 3: write contract -->
+  <rect x="400" y="395" width="170" height="60" rx="4" fill="#F5EAD9" stroke="#B5651D" stroke-width="1.5"/>
+  <text x="485" y="414" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="#B5651D">contracts/&lt;task&gt;</text>
+  <text x="485" y="428" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="#B5651D">.contract.md</text>
+  <text x="485" y="446" text-anchor="middle" font-size="9" fill="#5C5C5C">project · written as draft</text>
+
+  <!-- Step 4: REGISTRY + golden examples -->
+  <rect x="590" y="395" width="170" height="80" rx="4" fill="#ECE8F2" stroke="#6B5B95" stroke-width="1" stroke-dasharray="3,3"/>
+  <text x="675" y="412" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="#B5651D">REGISTRY.yaml</text>
+  <text x="675" y="426" text-anchor="middle" font-size="9" fill="#5C5C5C">project · read</text>
+  <text x="675" y="446" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="#6B5B95">llm-wiki/reference/</text>
+  <text x="675" y="460" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="#6B5B95">  golden/ + patterns/</text>
+  <text x="675" y="472" text-anchor="middle" font-size="9" fill="#5C5C5C">GLOBAL · read</text>
+
+  <!-- Step 5: write plan -->
+  <rect x="780" y="395" width="170" height="60" rx="4" fill="#F5EAD9" stroke="#B5651D" stroke-width="1.5"/>
+  <text x="865" y="414" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="#B5651D">plan/&lt;task&gt;</text>
+  <text x="865" y="428" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="#B5651D">.plan.md</text>
+  <text x="865" y="446" text-anchor="middle" font-size="9" fill="#5C5C5C">project · draft + 6-field challenge</text>
+
+  <!-- Step 6: src/* -->
+  <rect x="970" y="395" width="170" height="60" rx="4" fill="#F5EAD9" stroke="#B5651D" stroke-width="1.5"/>
+  <text x="1055" y="414" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="#B5651D">src/...</text>
+  <text x="1055" y="430" text-anchor="middle" font-size="9" fill="#5C5C5C">code + tests</text>
+  <text x="1055" y="446" text-anchor="middle" font-size="9" fill="#5C5C5C">project · only allowed paths</text>
+
+  <!-- Step 7: signals.json (per iteration) -->
+  <rect x="1160" y="395" width="170" height="60" rx="4" fill="#ECE8F2" stroke="#6B5B95" stroke-width="1.5"/>
+  <text x="1245" y="414" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="#6B5B95">signals.json</text>
+  <text x="1245" y="430" text-anchor="middle" font-size="9" fill="#5C5C5C">per-iteration metrics</text>
+  <text x="1245" y="446" text-anchor="middle" font-size="9" fill="#5C5C5C">mutation · penalty · review</text>
+
+  <!-- Step 8: session close writes -->
+  <rect x="1350" y="395" width="170" height="80" rx="4" fill="#F5EAD9" stroke="#B5651D" stroke-width="1.5"/>
+  <text x="1435" y="412" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="#B5651D">progress.md</text>
+  <text x="1435" y="426" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="#B5651D">wiki/&lt;id&gt;.md (suspected)</text>
+  <text x="1435" y="446" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="#6B5B95">signals.json (score)</text>
+  <text x="1435" y="460" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="#6B5B95">+ inbox/ if pattern</text>
+  <text x="1435" y="472" text-anchor="middle" font-size="9" fill="#5C5C5C">may suggest promotion</text>
+
+  <!-- Dashed arrows: AI → MCP -->
+  <line x1="295" y1="133" x2="295" y2="198" stroke="#5C5C5C" stroke-width="1" stroke-dasharray="3,3"/>
+  <polygon points="291,192 295,200 299,192" fill="#5C5C5C"/>
+  <line x1="485" y1="133" x2="485" y2="198" stroke="#5C5C5C" stroke-width="1" stroke-dasharray="3,3"/>
+  <polygon points="481,192 485,200 489,192" fill="#5C5C5C"/>
+  <line x1="675" y1="133" x2="675" y2="198" stroke="#5C5C5C" stroke-width="1" stroke-dasharray="3,3"/>
+  <polygon points="671,192 675,200 679,192" fill="#5C5C5C"/>
+  <line x1="865" y1="133" x2="865" y2="198" stroke="#5C5C5C" stroke-width="1" stroke-dasharray="3,3"/>
+  <polygon points="861,192 865,200 869,192" fill="#5C5C5C"/>
+  <line x1="1055" y1="133" x2="1055" y2="198" stroke="#5C5C5C" stroke-width="1" stroke-dasharray="3,3"/>
+  <polygon points="1051,192 1055,200 1059,192" fill="#5C5C5C"/>
+  <line x1="1245" y1="133" x2="1245" y2="198" stroke="#6B5B95" stroke-width="1" stroke-dasharray="3,3"/>
+  <polygon points="1241,192 1245,200 1249,192" fill="#6B5B95"/>
+  <line x1="1435" y1="133" x2="1435" y2="198" stroke="#5C5C5C" stroke-width="1" stroke-dasharray="3,3"/>
+  <polygon points="1431,192 1435,200 1439,192" fill="#5C5C5C"/>
+
+  <!-- Arrows: MCP → Repo (or AI direct → Repo for step 6) -->
+  <line x1="295" y1="328" x2="295" y2="392" stroke="#5C5C5C" stroke-width="1"/>
+  <polygon points="291,386 295,394 299,386" fill="#5C5C5C"/>
+  <line x1="485" y1="240" x2="485" y2="392" stroke="#5C5C5C" stroke-width="1"/>
+  <polygon points="481,386 485,394 489,386" fill="#5C5C5C"/>
+  <line x1="675" y1="296" x2="675" y2="392" stroke="#5C5C5C" stroke-width="1"/>
+  <polygon points="671,386 675,394 679,386" fill="#5C5C5C"/>
+  <line x1="865" y1="232" x2="865" y2="392" stroke="#5C5C5C" stroke-width="1"/>
+  <polygon points="861,386 865,394 869,386" fill="#5C5C5C"/>
+  <line x1="1055" y1="240" x2="1055" y2="392" stroke="#5C5C5C" stroke-width="1" stroke-dasharray="3,3"/>
+  <polygon points="1051,386 1055,394 1059,386" fill="#5C5C5C"/>
+  <line x1="1245" y1="296" x2="1245" y2="392" stroke="#6B5B95" stroke-width="1"/>
+  <polygon points="1241,386 1245,394 1249,386" fill="#6B5B95"/>
+  <line x1="1435" y1="328" x2="1435" y2="392" stroke="#5C5C5C" stroke-width="1"/>
+  <polygon points="1431,386 1435,394 1439,386" fill="#5C5C5C"/>
+
+  <!-- Legend -->
+  <text x="20" y="510" font-size="10" fill="#8A8780">— Solid arrow: persistent write · Dashed arrow: MCP call / read-only / direct filesystem write</text>
+  <text x="20" y="528" font-size="10" fill="#8A8780">— <tspan fill="#6B5B95" font-weight="700">Purple</tspan>: global llm-wiki / measurement substrate · <tspan fill="#B5651D" font-weight="700">Terracotta</tspan>: project <code>.governance/</code> · <tspan fill="#C9A227" font-weight="700">Gold</tspan>: new v0.4 MCP tool</text>
+  <text x="20" y="546" font-size="10" fill="#8A8780">— Agent never writes to <code>principles.md</code>, <code>coding-standards.md</code>, capability <code>spec.md</code>, or <code>llm-wiki/reference/</code>. Writes are limited to:</text>
+  <text x="20" y="562" font-size="10" fill="#8A8780">  contracts/, plans/ (drafts), src/, signals.json, progress.md, wiki/&lt;id&gt;.md (suspected), and optionally llm-wiki/inbox/ (proposed pattern promotions).</text>
+  <text x="20" y="582" font-size="10" fill="#8A8780">— The self-iteration loop in step 7 runs the contract + plan through <code>sdd validate</code>, not just the plan. Contracts are first-class schema citizens.</text>
+</svg>
+</div>
+<p class="annotation" style="margin-top:8px">Two new flows visible here vs. the v0.3 swim-lane: <strong>(1)</strong> the global llm-wiki is now a read source distinct from the project repo, contributing principles, patterns, and golden examples to context loading and feasibility analysis; <strong>(2)</strong> at session close the agent may suggest a pattern for promotion into <code>llm-wiki/inbox/</code> — the channel by which a team-specific finding climbs out into shared organizational knowledge.</p>
+
+<!-- 10. WHAT NEW IN v0.4 -->
+<h2>10 · What v0.4 added (the measurement substrate)</h2>
+<div class="grid cols-2" style="margin-top:16px">
+  <div class="panel">
+    <h3 style="color:var(--measure);margin-top:0">New in v0.4</h3>
+    <ul style="font-size:13px;color:var(--text);margin:0;padding-left:18px">
+      <li><strong>Principle 6</strong> (Measurement is part of the artifact) added to the load-bearing set.</li>
+      <li><code>sdd mutation</code> CLI + per-capability kill-rate thresholds in <code>spec.md</code> frontmatter.</li>
+      <li><code>plan.penalty_ledger</code> block, auto-populated by <code>sdd ledger ingest</code> from bisect / SAST / rollback records.</li>
+      <li><code>sdd calibration</code> CLI surfacing per-agent calibration curves from <code>signals.json</code>.</li>
+      <li><code>sdd benchmark</code> running B1–B10 against a configured tool (§8.1 of the whitepaper).</li>
+      <li>Mutation diff and zero-kill flags as reviewer aids (§8.2).</li>
+      <li>Author-AI / reviewer-AI separation (separation-of-duties), with disagreement surfaced to humans.</li>
+    </ul>
+  </div>
+  <div class="panel">
+    <h3 style="color:var(--text);margin-top:0">Coming in v0.5+ (CRM)</h3>
+    <ul style="font-size:13px;color:var(--text);margin:0;padding-left:18px">
+      <li>Graduated autonomy by action class, linked to calibration score.</li>
+      <li>Mandatory callouts for critical operations (schema migrations, data backfills, security-sensitive code).</li>
+      <li>Automated blameless post-incident review with structured chain reconstruction.</li>
+      <li>Recurrency requirements for AI tools operating in a codebase for 12+ months.</li>
+    </ul>
+    <p class="annotation" style="margin-top:12px">Drawn from aviation safety culture. The framework imports operational discipline from industries that already converged on it.</p>
+  </div>
+</div>
+
+<footer>
+  Source: <code>sdd-plus-plus/whitepaper/whitepaper.md</code> v0.4.0 (draft) · 2026-05-22 · <a href="../whitepaper/whitepaper.md">whitepaper.md</a> · <a href="../../sdlc-rethink/notes/research-program.md">research program</a>
+</footer>
+
+</body>
+</html>
