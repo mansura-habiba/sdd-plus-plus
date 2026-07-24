@@ -1,7 +1,7 @@
 # Local build and pre-publish checks for sdd-plus-plus.
 # Mirrors .github/workflows: test.yml, pylint.yml, python-publish.yml
 
-.PHONY: help status vars install-dev lint test build check-release test-wheel check clean clean-build clean-all upload-testpypi
+.PHONY: help status vars install-dev lint test build check-release test-wheel check clean clean-build clean-all upload-testpypi graphify-update
 
 PYTHON ?= python3
 VENV ?= .venv
@@ -56,6 +56,11 @@ lint: ## Run pylint (same scope as CI)
 test: ## Run pytest suite
 	$(PYTHON) -m pip install -q -e ".[full]"
 	$(PYTHON) -m pytest
+
+graphify-update: ## Refresh Graphify code graph (AST only, no API key)
+	@command -v graphify >/dev/null || (echo "❌ graphify not on PATH — pipx install graphifyy"; exit 1)
+	graphify update .
+	@echo "✅ graphify-out/graph.json updated"
 
 ##@ Release (local)
 

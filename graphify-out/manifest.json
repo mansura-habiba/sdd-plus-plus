@@ -1,0 +1,547 @@
+{
+  ".claude-plugin/marketplace.json": {
+    "mtime": 1779473269.6873233,
+    "ast_hash": "1c26314670cfe1d78a783b8f25584a43",
+    "semantic_hash": ""
+  },
+  ".claude-plugin/plugin.json": {
+    "mtime": 1779473269.7373548,
+    "ast_hash": "1faa9383f6a73c81db66dbacb451bd3a",
+    "semantic_hash": ""
+  },
+  "pyproject.toml": {
+    "mtime": 1779204906.6338594,
+    "ast_hash": "1d152ba48564688ff9b359f4b674f645",
+    "semantic_hash": ""
+  },
+  "src/sdd/__init__.py": {
+    "mtime": 1779195028.8594952,
+    "ast_hash": "725f00b33bdd73d7dcc40825f59cf046",
+    "semantic_hash": ""
+  },
+  "src/sdd/__main__.py": {
+    "mtime": 1779195032.6760316,
+    "ast_hash": "15aa818d56cce409735b1de2a4937686",
+    "semantic_hash": ""
+  },
+  "src/sdd/_paths.py": {
+    "mtime": 1779212566.8620799,
+    "ast_hash": "93cdaf6715e674a44944a3d70f569f17",
+    "semantic_hash": ""
+  },
+  "src/sdd/_progress.py": {
+    "mtime": 1779213038.5412707,
+    "ast_hash": "30fb466a6c20a67ba439de0a3ac22257",
+    "semantic_hash": ""
+  },
+  "src/sdd/_schemas/__init__.py": {
+    "mtime": 1779205021.556677,
+    "ast_hash": "84229df43bcb1adf4f53d28d59a72c95",
+    "semantic_hash": ""
+  },
+  "src/sdd/_status.py": {
+    "mtime": 1779213038.5935576,
+    "ast_hash": "e76e766e66f620aca91a7a8648cee3ee",
+    "semantic_hash": ""
+  },
+  "src/sdd/_yaml.py": {
+    "mtime": 1779213038.5287242,
+    "ast_hash": "0483ecc4f6f592291dcf1fbd118646d1",
+    "semantic_hash": ""
+  },
+  "src/sdd/cli.py": {
+    "mtime": 1779213038.5287356,
+    "ast_hash": "765afb1cd7d1976e74acc5d935442148",
+    "semantic_hash": ""
+  },
+  "src/sdd/commands/__init__.py": {
+    "mtime": 1779195116.7947886,
+    "ast_hash": "9c64d0112dc46a46c09244095512f15d",
+    "semantic_hash": ""
+  },
+  "src/sdd/commands/doctor.py": {
+    "mtime": 1779213038.4761992,
+    "ast_hash": "7431cd278ab2eb780bdd8b3b35f6ddad",
+    "semantic_hash": ""
+  },
+  "src/sdd/commands/findings.py": {
+    "mtime": 1779213097.9996955,
+    "ast_hash": "5856ee5777adde44eda7a8e5d3a61ebd",
+    "semantic_hash": ""
+  },
+  "src/sdd/commands/generate.py": {
+    "mtime": 1779213038.5139892,
+    "ast_hash": "cf623d6681e6e3ab1cda03edaf522426",
+    "semantic_hash": ""
+  },
+  "src/sdd/commands/init.py": {
+    "mtime": 1779213038.5287,
+    "ast_hash": "e669188f9baf05bedfbe8ba4cf514a52",
+    "semantic_hash": ""
+  },
+  "src/sdd/commands/plan.py": {
+    "mtime": 1779213098.0001416,
+    "ast_hash": "e970fa0f71de22ed3e53344e95effee9",
+    "semantic_hash": ""
+  },
+  "src/sdd/commands/progress.py": {
+    "mtime": 1779205585.670195,
+    "ast_hash": "69c4e31c4bca3996a5ff24df8c9247ae",
+    "semantic_hash": ""
+  },
+  "src/sdd/commands/serve.py": {
+    "mtime": 1779208256.541669,
+    "ast_hash": "3684b383f0eba3ad91398939cb3f9685",
+    "semantic_hash": ""
+  },
+  "src/sdd/commands/status.py": {
+    "mtime": 1779202971.024068,
+    "ast_hash": "b6ab268ff75c3688b6d6909db9d94170",
+    "semantic_hash": ""
+  },
+  "src/sdd/commands/validate.py": {
+    "mtime": 1779213038.5288067,
+    "ast_hash": "4e96e90ae73736e334694a784b2bbfa0",
+    "semantic_hash": ""
+  },
+  "src/sdd/templates/tests/test_acceptance_validates.py": {
+    "mtime": 1779195053.995888,
+    "ast_hash": "f97fc61d98ce978e09887ad9ffb1bd7e",
+    "semantic_hash": ""
+  },
+  "src/sdd/templates/tests/test_task_card_validates.py": {
+    "mtime": 1779195053.9925168,
+    "ast_hash": "59fc3e32a5f34782b1b70ade01b40507",
+    "semantic_hash": ""
+  },
+  "tests/__init__.py": {
+    "mtime": 1779195278.0044687,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "tests/test_e2e.py": {
+    "mtime": 1779208440.5932775,
+    "ast_hash": "c48e94f03270aab29a4669cc74f09af7",
+    "semantic_hash": ""
+  },
+  "tests/test_findings.py": {
+    "mtime": 1779208465.4163241,
+    "ast_hash": "025088b30b643c99a1dd1418ece8761f",
+    "semantic_hash": ""
+  },
+  "tests/test_plan.py": {
+    "mtime": 1779208491.8707166,
+    "ast_hash": "7794fc534df6c46a67905b538f9508f3",
+    "semantic_hash": ""
+  },
+  "tests/test_progress.py": {
+    "mtime": 1779206240.0133052,
+    "ast_hash": "265833f2ad27efd95e3c0e480bf2570f",
+    "semantic_hash": ""
+  },
+  "tests/test_serve.py": {
+    "mtime": 1779208502.5945323,
+    "ast_hash": "ea9af97d4cc196fc0e60cee9172a6007",
+    "semantic_hash": ""
+  },
+  "tests/test_status.py": {
+    "mtime": 1779206280.6157453,
+    "ast_hash": "b8181c25ef7d8aae271ec9f6691a90ff",
+    "semantic_hash": ""
+  },
+  ".bob/modes/bob-scaffolder.md": {
+    "mtime": 1779473269.6853986,
+    "ast_hash": "1bc48972e461b6b50f3ae739de241acd",
+    "semantic_hash": ""
+  },
+  ".bob/modes/dana-reviewer.md": {
+    "mtime": 1779473269.6858292,
+    "ast_hash": "5905ed04a6d52b6fcdfe1f0c292e8bf7",
+    "semantic_hash": ""
+  },
+  ".bob/modes/eve-elicitor.md": {
+    "mtime": 1779473269.7368555,
+    "ast_hash": "3d3efda090a00be4edd4a1ed90631f5e",
+    "semantic_hash": ""
+  },
+  ".bob/modes/planner.md": {
+    "mtime": 1779473269.6862836,
+    "ast_hash": "3824585500d2e805b48d83c5fe7dfc72",
+    "semantic_hash": ""
+  },
+  ".bob/modes/reviewer.md": {
+    "mtime": 1779473269.686848,
+    "ast_hash": "a09e78406e2ee0d7daf0f492bd672d7f",
+    "semantic_hash": ""
+  },
+  ".github/ISSUE_TEMPLATE/task-card.yml": {
+    "mtime": 1779473269.6905441,
+    "ast_hash": "a49d1d34ff37d41d0dc370a6bc907599",
+    "semantic_hash": ""
+  },
+  ".github/pull_request_template.md": {
+    "mtime": 1779473269.6912289,
+    "ast_hash": "d20926705e04fc5b6c0322e2f3a6d166",
+    "semantic_hash": ""
+  },
+  ".github/workflows/governance.yml": {
+    "mtime": 1779473269.692374,
+    "ast_hash": "e66c0e9c68a74d958a289c3fc41433f2",
+    "semantic_hash": ""
+  },
+  ".github/workflows/pylint.yml": {
+    "mtime": 1779213368.4700787,
+    "ast_hash": "bacc9debf5c22774a89bd9e9c7bbd99c",
+    "semantic_hash": ""
+  },
+  ".github/workflows/python-publish.yml": {
+    "mtime": 1779213256.1171393,
+    "ast_hash": "b8d70f45d6bc45c6b8273bd8f465ec02",
+    "semantic_hash": ""
+  },
+  ".github/workflows/test.yml": {
+    "mtime": 1779213367.8505757,
+    "ast_hash": "330f9f1bd6427bae4107f9d84318cd99",
+    "semantic_hash": ""
+  },
+  ".governance/.progress-log.yaml": {
+    "mtime": 1779473269.7382164,
+    "ast_hash": "b1974cc19b014d81ba12696c032b2eca",
+    "semantic_hash": ""
+  },
+  ".governance/DEVELOPMENT-PLAN.md": {
+    "mtime": 1779812386.5644844,
+    "ast_hash": "dbe5e6b21d6b1034b0dfff4260043e45",
+    "semantic_hash": ""
+  },
+  ".governance/USAGE.md": {
+    "mtime": 1779473269.6952386,
+    "ast_hash": "469917c79fce257e67cdb8a191da596f",
+    "semantic_hash": ""
+  },
+  ".governance/arch_spec.md": {
+    "mtime": 1779473269.6963208,
+    "ast_hash": "5ab68e6ab6f0204699f508f965d05074",
+    "semantic_hash": ""
+  },
+  ".governance/capabilities/REGISTRY.yaml": {
+    "mtime": 1779473269.738727,
+    "ast_hash": "49edaa5a3f7d08c4e702d96dc02e6c8f",
+    "semantic_hash": ""
+  },
+  ".governance/capabilities/elicitation-and-escalation/design.md": {
+    "mtime": 1779473269.739238,
+    "ast_hash": "61d7263b0cfe4f53abcb2f7cd7076340",
+    "semantic_hash": ""
+  },
+  ".governance/capabilities/elicitation-and-escalation/research.md": {
+    "mtime": 1779473269.739691,
+    "ast_hash": "768f070ff0cd12c2a6ee077ef62464e2",
+    "semantic_hash": ""
+  },
+  ".governance/capabilities/elicitation-and-escalation/spec.yaml": {
+    "mtime": 1779473269.7402308,
+    "ast_hash": "9bca3847457f947ff6a9b3bb5d0059cf",
+    "semantic_hash": ""
+  },
+  ".governance/capabilities/example-feature/spec.yaml": {
+    "mtime": 1779473269.6974988,
+    "ast_hash": "37cba5b47dc5eb3eac7d38f1bf018332",
+    "semantic_hash": ""
+  },
+  ".governance/capabilities/mutation-testing/design.md": {
+    "mtime": 1779473269.7408223,
+    "ast_hash": "c753de26b3d1d5b9db429021dffbf569",
+    "semantic_hash": ""
+  },
+  ".governance/capabilities/mutation-testing/research.md": {
+    "mtime": 1779473269.7414203,
+    "ast_hash": "094c7c8449a3d851bf0c446095bb403e",
+    "semantic_hash": ""
+  },
+  ".governance/capabilities/mutation-testing/spec.yaml": {
+    "mtime": 1779473269.741843,
+    "ast_hash": "9010c9e58d4c9d9bc5765705df65cb96",
+    "semantic_hash": ""
+  },
+  ".governance/instructions.md": {
+    "mtime": 1779473269.6979663,
+    "ast_hash": "eac4829e0c7bef15f15cdb5fb1f70021",
+    "semantic_hash": ""
+  },
+  ".governance/plan/example.plan.yaml": {
+    "mtime": 1779473269.698437,
+    "ast_hash": "aa18eda64da8deee146a2a26f40920ba",
+    "semantic_hash": ""
+  },
+  ".governance/progress.md": {
+    "mtime": 1779473269.7422738,
+    "ast_hash": "04e558cdd6e18cad78fc9c64d18987ff",
+    "semantic_hash": ""
+  },
+  ".governance/sdd-config.schema.yaml": {
+    "mtime": 1779473269.6990376,
+    "ast_hash": "29a9f4cc6c9f006629f43dbdf94bcb29",
+    "semantic_hash": ""
+  },
+  ".governance/wiki/coding-standards.md": {
+    "mtime": 1779473269.6995761,
+    "ast_hash": "b5d26ebd4208e7c43851ec64b87c8f0d",
+    "semantic_hash": ""
+  },
+  ".governance/wiki/principles.md": {
+    "mtime": 1779473269.700475,
+    "ast_hash": "9bc8fdb84ac7db2a8db8842e44d1f8e0",
+    "semantic_hash": ""
+  },
+  "AGENTS.md": {
+    "mtime": 1779473269.7007506,
+    "ast_hash": "eac4829e0c7bef15f15cdb5fb1f70021",
+    "semantic_hash": ""
+  },
+  "CONFIG.md": {
+    "mtime": 1779473269.7013748,
+    "ast_hash": "44e134ec91865b81313d3d5cc19e232c",
+    "semantic_hash": ""
+  },
+  "PLUGIN.md": {
+    "mtime": 1779473269.7019658,
+    "ast_hash": "617483541973f73e966c69cc997fc3ba",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1779478494.8135252,
+    "ast_hash": "07199162b44f04270705089422fc1ee7",
+    "semantic_hash": ""
+  },
+  "ROADMAP.md": {
+    "mtime": 1779200888.722291,
+    "ast_hash": "e726e58901cd275fc51cdb932f95217c",
+    "semantic_hash": ""
+  },
+  "commands/sdd-config.md": {
+    "mtime": 1779473269.7029576,
+    "ast_hash": "64b254dac73810fcf0a5de905d5e0635",
+    "semantic_hash": ""
+  },
+  "commands/sdd-doctor.md": {
+    "mtime": 1779473269.7033236,
+    "ast_hash": "db93dae8066e23149a2c3b8540e1f23c",
+    "semantic_hash": ""
+  },
+  "commands/sdd-finding-add.md": {
+    "mtime": 1779473269.7039049,
+    "ast_hash": "005d5c93c4880c05c5c3adf428ecefd0",
+    "semantic_hash": ""
+  },
+  "commands/sdd-init.md": {
+    "mtime": 1779473269.7041743,
+    "ast_hash": "1320e5ffd00f0ff950f69beb74e01bd3",
+    "semantic_hash": ""
+  },
+  "commands/sdd-review.md": {
+    "mtime": 1779473269.7045372,
+    "ast_hash": "7161d48649891ecc204ff4c1b92d2fe5",
+    "semantic_hash": ""
+  },
+  "commands/sdd-validate.md": {
+    "mtime": 1779473269.7048624,
+    "ast_hash": "b0746f5a6b52bb321e859dc486c37d31",
+    "semantic_hash": ""
+  },
+  "docs/how-to-use.md": {
+    "mtime": 1784793805.4029481,
+    "ast_hash": "889a91431edd2ed561d0cc9784e21438",
+    "semantic_hash": ""
+  },
+  "docs/index.html": {
+    "mtime": 1779478085.2329056,
+    "ast_hash": "9648d9893db882c5dd95481f393a5480",
+    "semantic_hash": ""
+  },
+  "examples/sdd-config.example.yaml": {
+    "mtime": 1779473269.7053015,
+    "ast_hash": "4a14dc46258e7c6edd56caa63f198909",
+    "semantic_hash": ""
+  },
+  "src/sdd/_schemas/capability_spec.schema.yaml": {
+    "mtime": 1779207080.8834682,
+    "ast_hash": "6efbdc55b0e5fe85fa45c6329ead3dbe",
+    "semantic_hash": ""
+  },
+  "src/sdd/_schemas/finding.schema.yaml": {
+    "mtime": 1779207104.8909297,
+    "ast_hash": "282a19d41e03544b8dffc045f815bef4",
+    "semantic_hash": ""
+  },
+  "src/sdd/_schemas/plan.schema.yaml": {
+    "mtime": 1779207093.2259796,
+    "ast_hash": "7e313b8eef8d3a1244aadbd1e2ef3288",
+    "semantic_hash": ""
+  },
+  "src/sdd/_schemas/registry.schema.yaml": {
+    "mtime": 1779205086.0022662,
+    "ast_hash": "2db2b4b9abe581d0ee3fc8aa5be14b6c",
+    "semantic_hash": ""
+  },
+  "src/sdd/templates/USAGE.md": {
+    "mtime": 1779208310.9931996,
+    "ast_hash": "469917c79fce257e67cdb8a191da596f",
+    "semantic_hash": ""
+  },
+  "src/sdd/templates/ai/AGENTS.md": {
+    "mtime": 1779202647.53452,
+    "ast_hash": "c796c9bd7b2d5bb3557925c10205ef30",
+    "semantic_hash": ""
+  },
+  "src/sdd/templates/arch_spec.md": {
+    "mtime": 1779205162.246637,
+    "ast_hash": "5ab68e6ab6f0204699f508f965d05074",
+    "semantic_hash": ""
+  },
+  "src/sdd/templates/capabilities/REGISTRY.yaml": {
+    "mtime": 1779208418.1181245,
+    "ast_hash": "4d724cd70c8b025872229160083d8283",
+    "semantic_hash": ""
+  },
+  "src/sdd/templates/capabilities/example-capability.yaml": {
+    "mtime": 1779195053.979357,
+    "ast_hash": "ae4a10f8892636f4a31e713f9fa1e5e2",
+    "semantic_hash": ""
+  },
+  "src/sdd/templates/capabilities/example-feature/spec.md": {
+    "mtime": 1779205121.5093877,
+    "ast_hash": "187297d2bf3a7d4cd03a37521ac109c0",
+    "semantic_hash": ""
+  },
+  "src/sdd/templates/capabilities/example-feature/spec.yaml": {
+    "mtime": 1779207140.07369,
+    "ast_hash": "37cba5b47dc5eb3eac7d38f1bf018332",
+    "semantic_hash": ""
+  },
+  "src/sdd/templates/docs/diagrams.md": {
+    "mtime": 1779195053.96932,
+    "ast_hash": "cb95a1b5ed463b50114095e4a4dfb6f8",
+    "semantic_hash": ""
+  },
+  "src/sdd/templates/docs/governance-README.md": {
+    "mtime": 1779195053.966914,
+    "ast_hash": "6b337427e2a672c8581493e5082b8613",
+    "semantic_hash": ""
+  },
+  "src/sdd/templates/docs/philosophy.md": {
+    "mtime": 1779195053.9644675,
+    "ast_hash": "04d64638e8d67798a4f5c2564e1af4ab",
+    "semantic_hash": ""
+  },
+  "src/sdd/templates/docs/testing-philosophy.md": {
+    "mtime": 1779195053.9724534,
+    "ast_hash": "83d6912118e7552059b2c5a9c9ed2522",
+    "semantic_hash": ""
+  },
+  "src/sdd/templates/examples/example-finding.finding.yaml": {
+    "mtime": 1779202625.8413522,
+    "ast_hash": "60631cacff940ea239983b43c7046bf3",
+    "semantic_hash": ""
+  },
+  "src/sdd/templates/examples/skill-validation.acceptance.yaml": {
+    "mtime": 1779195053.977055,
+    "ast_hash": "9ac2e875ce9b3c06a253ce84c0201967",
+    "semantic_hash": ""
+  },
+  "src/sdd/templates/examples/task-card.example.yaml": {
+    "mtime": 1779195429.3026161,
+    "ast_hash": "b178583805589d09f734b1b2828d1af4",
+    "semantic_hash": ""
+  },
+  "src/sdd/templates/github/ISSUE_TEMPLATE/task-card.yml": {
+    "mtime": 1779205276.7917252,
+    "ast_hash": "a49d1d34ff37d41d0dc370a6bc907599",
+    "semantic_hash": ""
+  },
+  "src/sdd/templates/github/pull_request_template.md": {
+    "mtime": 1779208210.2792635,
+    "ast_hash": "d20926705e04fc5b6c0322e2f3a6d166",
+    "semantic_hash": ""
+  },
+  "src/sdd/templates/github/workflows/governance.yml": {
+    "mtime": 1779208203.4463236,
+    "ast_hash": "e66c0e9c68a74d958a289c3fc41433f2",
+    "semantic_hash": ""
+  },
+  "src/sdd/templates/instructions.md": {
+    "mtime": 1779208339.83005,
+    "ast_hash": "eac4829e0c7bef15f15cdb5fb1f70021",
+    "semantic_hash": ""
+  },
+  "src/sdd/templates/plan/example.plan.md": {
+    "mtime": 1779205189.1653373,
+    "ast_hash": "9fe22d94f230d3b6bb30c72b06b97196",
+    "semantic_hash": ""
+  },
+  "src/sdd/templates/plan/example.plan.yaml": {
+    "mtime": 1779207164.0881948,
+    "ast_hash": "aa18eda64da8deee146a2a26f40920ba",
+    "semantic_hash": ""
+  },
+  "src/sdd/templates/schemas/acceptance.schema.yaml": {
+    "mtime": 1779195053.9619353,
+    "ast_hash": "9ae6cd157d80f2f3a08e7f8fbdf8cbd0",
+    "semantic_hash": ""
+  },
+  "src/sdd/templates/schemas/capability-spec.schema.yaml": {
+    "mtime": 1779195053.9586332,
+    "ast_hash": "a18d698ff7f522499ace8094abe54abf",
+    "semantic_hash": ""
+  },
+  "src/sdd/templates/schemas/finding.schema.yaml": {
+    "mtime": 1779202371.5407667,
+    "ast_hash": "d15e2535cc1c2befd8681839d30d3bfc",
+    "semantic_hash": ""
+  },
+  "src/sdd/templates/schemas/task-card.schema.yaml": {
+    "mtime": 1779195053.9529448,
+    "ast_hash": "ab3c9deb4d9d28d8470b91c68cf218bf",
+    "semantic_hash": ""
+  },
+  "src/sdd/templates/wiki/coding-standards.md": {
+    "mtime": 1779205758.5927348,
+    "ast_hash": "b5d26ebd4208e7c43851ec64b87c8f0d",
+    "semantic_hash": ""
+  },
+  "src/sdd/templates/wiki/principles.md": {
+    "mtime": 1779204957.1616209,
+    "ast_hash": "9bc8fdb84ac7db2a8db8842e44d1f8e0",
+    "semantic_hash": ""
+  },
+  "whitepaper.md": {
+    "mtime": 1779473267.5569205,
+    "ast_hash": "f787f607450e940ffd49d666a628f13b",
+    "semantic_hash": ""
+  },
+  "whitepaper/governance-for-ai-assisted-development.html": {
+    "mtime": 1782947507.8442807,
+    "ast_hash": "8759cb35c26d35ace8b742bfb017d134",
+    "semantic_hash": ""
+  },
+  "whitepaper/redhat-samsung-ai-sdlc-case-study.md": {
+    "mtime": 1779473269.7207499,
+    "ast_hash": "5452a4d2b9cb572aedd0418ca83ce7e2",
+    "semantic_hash": ""
+  },
+  "whitepaper/sdd-plus-plus-overview.html": {
+    "mtime": 1779477927.2488115,
+    "ast_hash": "9648d9893db882c5dd95481f393a5480",
+    "semantic_hash": ""
+  },
+  "whitepaper/whitepaper.md": {
+    "mtime": 1779477853.3840642,
+    "ast_hash": "b06291e0690f85914a2057264cfc4681",
+    "semantic_hash": ""
+  },
+  "Governance for AI-Assisted Software Development.pdf": {
+    "mtime": 1783343072.4603524,
+    "ast_hash": "a2e183a793d20564ee846d181048ecfe",
+    "semantic_hash": ""
+  }
+}

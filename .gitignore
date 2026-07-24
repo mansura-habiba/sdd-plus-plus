@@ -48,3 +48,14 @@ uv.lock.bak
 *.docx
 *.pptx
 
+# Graphify (https://github.com/Graphify-Labs/graphify)
+# Keep graph.json + report for KB search; ignore rebuild cache/artifacts.
+graphify-out/cache/
+graphify-out/.graphify_analysis.json
+graphify-out/.graphify_labels.json
+graphify-out/graph.html
+graphify-out/GRAPH_TREE.html
+graphify-out/obsidian/
+graphify-out/memory/
+graphify-out/reflections/
+
