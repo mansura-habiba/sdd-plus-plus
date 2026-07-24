@@ -1,0 +1,34 @@
+id: example-feature-still-placeholder
+title: "example-feature capability is still a TODO starter, not a real contract"
+status: suspected
+severity: medium
+discovered_by: "@mansurah"
+discovered_at: "2026-07-24"
+discovered_during: "DEBT-1"
+ai_assistance: suggested
+related_capabilities:
+  - example-feature
+tags:
+  - tech-debt
+  - code-smell
+  - dogfooding
+finding: |
+  The active registry entry example-feature still has TODO contract fields, a
+  placeholder owner (@TODO-your-handle), and starter purpose prose. The repo
+  treats it as an active capability while it does not describe real product
+  behavior — agents reading the registry get a false sense of coverage.
+evidence:
+  - ".governance/capabilities/example-feature/spec.yaml — TODO contract inputs/outputs/invariants"
+  - ".governance/capabilities/REGISTRY.yaml — status: active for example-feature"
+implications: |
+  Do not implement product work under example-feature until a human renames and
+  rewrites the spec. Prefer a real capability id. Debt pay-down: replace or
+  demote example-feature once a first real capability is active.
+mitigation:
+  - "Human rewrite or retire example-feature; update REGISTRY status"
+status_history:
+  - date: "2026-07-24"
+    status: suspected
+    by: "@mansurah"
+    note: "Seeded from DEBT-1 backlog enablement."
+notes: "AI-suggested; human must confirm before treating as confirmed debt."

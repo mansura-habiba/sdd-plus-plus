@@ -1,7 +1,7 @@
 # Local build and pre-publish checks for sdd-plus-plus.
 # Mirrors .github/workflows: test.yml, pylint.yml, python-publish.yml
 
-.PHONY: help status vars install-dev lint test build check-release test-wheel check clean clean-build clean-all upload-testpypi
+.PHONY: help status vars install-dev lint test build check-release test-wheel check clean clean-build clean-all upload-testpypi debt debt-open
 
 PYTHON ?= python3
 VENV ?= .venv
@@ -56,6 +56,29 @@ lint: ## Run pylint (same scope as CI)
 test: ## Run pytest suite
 	$(PYTHON) -m pip install -q -e ".[full]"
 	$(PYTHON) -m pytest
+
+##@ Governance
+
+debt: ## List tech-debt / vulnerability / code-smell findings
+	@echo ""
+	@echo "=== tech-debt ==="
+	@sdd findings list --tag tech-debt
+	@echo ""
+	@echo "=== vulnerability ==="
+	@sdd findings list --tag vulnerability
+	@echo ""
+	@echo "=== code-smell ==="
+	@sdd findings list --tag code-smell
+	@echo ""
+	@echo "Convention: .governance/wiki/debt-backlog.md"
+
+debt-open: ## List all suspected + confirmed findings
+	@echo ""
+	@echo "=== suspected ==="
+	@sdd findings list --status suspected
+	@echo ""
+	@echo "=== confirmed ==="
+	@sdd findings list --status confirmed
 
 ##@ Release (local)
 

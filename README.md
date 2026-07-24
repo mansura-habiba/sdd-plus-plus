@@ -75,6 +75,11 @@ sdd findings add --from-task BBS-127    # Pre-fill from task context
 sdd findings list --capability auth     # List findings filtered by capability or tag
 sdd findings show <id>                  # Show a finding's full content
 
+# Tech debt backlog — findings tagged tech-debt | vulnerability | code-smell
+make debt                               # List debt / vulns / smells
+make debt-open                          # List suspected + confirmed findings
+# See .governance/wiki/debt-backlog.md
+
 # MCP server for IDE integration (v0.2, requires `pip install 'sdd-plus-plus[serve]'`)
 sdd serve                               # Start the MCP server on stdio
 sdd serve --transport http              # HTTP/SSE transport for remote setups
