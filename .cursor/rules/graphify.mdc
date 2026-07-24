@@ -1,0 +1,39 @@
+---
+description: Graphify knowledge-graph search for this repo
+alwaysApply: true
+---
+
+# Graphify — knowledge base + architecture search
+
+This repo maintains a Graphify graph at `graphify-out/graph.json`
+([Graphify](https://github.com/Graphify-Labs/graphify)).
+
+## When to use Graphify
+
+Prefer Graphify for **cross-cutting** questions — architecture, dependency paths,
+“what touches X”, how capabilities relate in code:
+
+```bash
+graphify query "<question>" --graph graphify-out/graph.json
+graphify path "<A>" "<B>" --graph graphify-out/graph.json
+graphify explain "<concept>" --graph graphify-out/graph.json
+```
+
+If a global multi-repo graph exists, use that path instead (see user/workspace Graphify config).
+
+## When NOT to use Graphify first
+
+Governance artifacts still go through the SDD surface (file read or `sdd serve` MCP):
+
+- capability specs, plans, principles → `get_capability` / `get_plan` / `get_principles`
+- findings lifecycle → `list_findings` / `search_findings` / `propose_finding`
+- progress → `get_progress` / `record_progress`
+
+Graphify complements those tools; it does not replace them.
+
+## Keeping the graph fresh
+
+- After meaningful code changes: `graphify update .` (AST only, no API key)
+- After doc/wiki/PDF changes that should enter the graph: run `/graphify --update`
+  (or `graphify extract .`) with a configured LLM backend
+- If `graphify-out/graph.json` is missing: `graphify update .` before relying on queries

@@ -1,7 +1,8 @@
 # Local build and pre-publish checks for sdd-plus-plus.
 # Mirrors .github/workflows: test.yml, pylint.yml, python-publish.yml
 
-.PHONY: help status vars install-dev lint test build check-release test-wheel check clean clean-build clean-all upload-testpypi debt debt-open
+
+.PHONY: help status vars install-dev lint test build check-release test-wheel check clean clean-build clean-all upload-testpypi graphify-update debt debt-open
 
 PYTHON ?= python3
 VENV ?= .venv
@@ -57,6 +58,7 @@ test: ## Run pytest suite
 	$(PYTHON) -m pip install -q -e ".[full]"
 	$(PYTHON) -m pytest
 
+
 ##@ Governance
 
 debt: ## List tech-debt / vulnerability / code-smell findings
@@ -79,6 +81,12 @@ debt-open: ## List all suspected + confirmed findings
 	@echo ""
 	@echo "=== confirmed ==="
 	@sdd findings list --status confirmed
+
+graphify-update: ## Refresh Graphify code graph (AST only, no API key)
+	@command -v graphify >/dev/null || (echo "❌ graphify not on PATH — pipx install graphifyy"; exit 1)
+	graphify update .
+	@echo "✅ graphify-out/graph.json updated"
+
 
 ##@ Release (local)
 

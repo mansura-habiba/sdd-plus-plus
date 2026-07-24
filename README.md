@@ -2,6 +2,8 @@
 
 > **Spec-Driven Development that ships.** A Python tool that bootstraps any repo with executable specs, structured acceptance criteria, AI assistant rules, and CI gates — designed for AI-assisted teams where juniors, seniors, and AI coding assistants all need to coordinate without losing each other.
 
+[**View the system overview diagram →**](https://raw.githack.com/MANSURAH/sdd-plus-plus/main/whitepaper/sdd-plus-plus-overview.html)
+
 ```bash
 pip install sdd-plus-plus
 cd your-repo
@@ -29,6 +31,8 @@ After install you get:
 The plugin requires `pip install 'sdd-plus-plus[serve]'` so the `sdd` binary is on `$PATH` for the MCP server.
 
 **Optional but powerful: a shared findings wiki.** Point `wiki.repo` in your config at a git repo and findings stop being trapped per-codebase — they become an org-wide knowledge layer that Bob reads before scaffolding and Dana publishes to after review. See [`CONFIG.md`](./CONFIG.md) and [`examples/sdd-config.example.yaml`](./examples/sdd-config.example.yaml).
+
+**Optional: Graphify knowledge-graph search.** This repo dogfoods [Graphify](https://github.com/Graphify-Labs/graphify) for architecture / dependency questions (`graphify query` / `path` / `explain` against `graphify-out/graph.json`). Findings lifecycle still uses `sdd findings` / MCP. See [docs/how-to-use.md](./docs/how-to-use.md#optional-graphify-knowledge-graph-search).
 
 ---
 
