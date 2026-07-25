@@ -12,6 +12,9 @@ sdd init
 
 That's it. 60 seconds from install to a working `.governance/` framework in your repo.
 
+**Lifecycle guide (HTML):** open [`docs/sdlc-guide.html`](./docs/sdlc-guide.html) in a browser — bootstrap → define → plan → build → learn → gate → continue.
+
+
 ### Or install as a Claude Code plugin
 
 `sdd-plus-plus` ships as a Claude Code plugin too — bundling the `sdd serve` MCP server, the **Bob** (scaffolder) and **Dana** (reviewer) agents, and slash commands for the full CLI.

@@ -50,3 +50,7 @@
     kind: validate
     message: 5 passed, 0 failed, 0 cross-ref issues.
     actor: '@mansurah'
+  - ts: '2026-07-24T14:45:14Z'
+    kind: progress
+    message: 'DOCS-1: added docs/sdlc-guide.html lifecycle guide + README link'
+    actor: '@mansurah'
