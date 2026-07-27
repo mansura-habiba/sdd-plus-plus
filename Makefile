@@ -2,7 +2,7 @@
 # Mirrors .github/workflows: test.yml, pylint.yml, python-publish.yml
 
 
-.PHONY: help status vars install-dev lint test build check-release test-wheel check clean clean-build clean-all upload-testpypi graphify-update debt debt-open
+.PHONY: help status vars install-dev lint test build check-release test-wheel check clean clean-build clean-all upload-testpypi graphify-update graph-status debt debt-open
 
 PYTHON ?= python3
 VENV ?= .venv
@@ -86,6 +86,9 @@ graphify-update: ## Refresh Graphify code graph (AST only, no API key)
 	@command -v graphify >/dev/null || (echo "❌ graphify not on PATH — pipx install graphifyy"; exit 1)
 	graphify update .
 	@echo "✅ graphify-out/graph.json updated"
+
+graph-status: ## Show sdd graph / Graphify companion status
+	sdd graph status
 
 
 ##@ Release (local)

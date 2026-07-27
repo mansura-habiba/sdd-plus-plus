@@ -23,7 +23,7 @@ Substring `search_findings` only covers finding YAML. Graphify adds AST (and opt
 ## Out of scope / follow-ups
 
 - [ ] Human-authored capability `spec.yaml` for `graphify-kb-search` (registry requires `spec_path`; AI cannot author specs)
-- [ ] Optional `sdd graph query` CLI / MCP wrappers around Graphify
+- [x] Optional `sdd graph query` CLI / MCP wrappers around Graphify → **GRAPHIFY-2**
 - [ ] Semantic extract of `.governance/wiki`, `docs/`, whitepaper PDF into the graph (needs LLM backend)
 
 ## Challenge

@@ -201,3 +201,28 @@ properties:
         description: |
           When `sdd findings add --from-task <id>` runs, auto-populate
           `linked_capability` from the task card.
+
+  knowledge:
+    type: object
+    additionalProperties: false
+    description: |
+      Optional knowledge-graph companion (Graphify). sdd never hard-depends on
+      Graphify — when disabled or missing, `sdd graph` / MCP kb_* degrade with
+      install hints; kb_query falls back to search_findings.
+    properties:
+      graphify:
+        type: object
+        additionalProperties: false
+        properties:
+          enabled:
+            type: boolean
+            default: true
+            description: |
+              When false, `sdd graph` and MCP kb_* tools refuse Graphify calls.
+              Findings tools remain available.
+          graph_path:
+            type: string
+            default: "graphify-out/graph.json"
+            description: |
+              Path to graph.json relative to the repo root, or an absolute path
+              (e.g. ~/.graphify/global-graph.json for a multi-repo graph).

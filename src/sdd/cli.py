@@ -9,6 +9,7 @@ Commands:
   plan (new|accept|list|show)  AI-generated plans with mandatory human acceptance.
   progress (update|refresh)  Running progress log; `sdd progress` prints it.
   status                Deprecated alias for `sdd progress`.
+  graph                 Optional Graphify companion (query / path / memory).
   serve                 MCP server exposing the framework to AI assistants.
 """
 from __future__ import annotations
@@ -237,6 +238,101 @@ def update_status_cmd(target, kind, message, actor):
     """Append a progress event and refresh progress.md. Convenience alias for `sdd progress update`."""
     from sdd.commands.progress import run_progress_update
     sys.exit(run_progress_update(target=target, kind=kind, message=message, actor=actor))
+
+
+# -----------------------------------------------------------------------------
+# graph (optional Graphify companion)
+# -----------------------------------------------------------------------------
+
+
+@main.group("graph")
+def graph_group() -> None:
+    """Optional Graphify companion — graph engineering for developers and AI.
+
+    Requires the `graphify` CLI on PATH (`pipx install graphifyy`). Does not
+    replace findings authority; use `sdd findings` / MCP search_findings for
+    status-aware knowledge blocks.
+    """
+
+
+@graph_group.command("status")
+@click.option("--target", type=click.Path(file_okay=False, path_type=Path), default=None)
+def graph_status_cmd(target):
+    """Show whether graphify and graph.json are available."""
+    from sdd.commands.graph import run_graph_status
+    sys.exit(run_graph_status(target=target))
+
+
+@graph_group.command("update")
+@click.option("--target", type=click.Path(file_okay=False, path_type=Path), default=None)
+@click.option("--force", is_flag=True, help="Pass --force to graphify update.")
+def graph_update_cmd(target, force):
+    """Refresh the code AST graph (no API key)."""
+    from sdd.commands.graph import run_graph_update
+    sys.exit(run_graph_update(target=target, force=force))
+
+
+@graph_group.command("query")
+@click.argument("question", type=str)
+@click.option("--target", type=click.Path(file_okay=False, path_type=Path), default=None)
+@click.option("--budget", type=int, default=None, help="Token budget for graphify query.")
+@click.option("--dfs", is_flag=True, help="Use depth-first traversal.")
+def graph_query_cmd(question, target, budget, dfs):
+    """BFS/DFS traversal of graph.json for a question."""
+    from sdd.commands.graph import run_graph_query
+    sys.exit(run_graph_query(question, target=target, budget=budget, dfs=dfs))
+
+
+@graph_group.command("path")
+@click.argument("a", type=str)
+@click.argument("b", type=str)
+@click.option("--target", type=click.Path(file_okay=False, path_type=Path), default=None)
+def graph_path_cmd(a, b, target):
+    """Shortest path between two nodes."""
+    from sdd.commands.graph import run_graph_path
+    sys.exit(run_graph_path(a, b, target=target))
+
+
+@graph_group.command("explain")
+@click.argument("concept", type=str)
+@click.option("--target", type=click.Path(file_okay=False, path_type=Path), default=None)
+def graph_explain_cmd(concept, target):
+    """Plain-language explanation of a node and its neighbors."""
+    from sdd.commands.graph import run_graph_explain
+    sys.exit(run_graph_explain(concept, target=target))
+
+
+@graph_group.group("memory")
+def graph_memory_group() -> None:
+    """Shared graph memory (graphify-out/memory) — chat forgets, graph doesn't."""
+
+
+@graph_memory_group.command("save")
+@click.option("--question", "question", type=str, required=True)
+@click.option("--answer", "answer", type=str, required=True)
+@click.option("--type", "result_type", type=str, default="query", show_default=True)
+@click.option("--node", "nodes", multiple=True, help="Cited node label (repeatable).")
+@click.option("--outcome", type=click.Choice(["useful", "dead_end", "corrected"]), default=None)
+@click.option("--correction", type=str, default=None)
+@click.option("--memory-dir", type=click.Path(file_okay=False, path_type=Path), default=None)
+@click.option("--target", type=click.Path(file_okay=False, path_type=Path), default=None)
+def graph_memory_save_cmd(question, answer, result_type, nodes, outcome, correction, memory_dir, target):
+    """Save a Q&A result into graphify memory for the feedback loop."""
+    from sdd.commands.graph import run_graph_memory_save
+    sys.exit(run_graph_memory_save(
+        question, answer, target=target, result_type=result_type,
+        nodes=nodes, outcome=outcome, correction=correction, memory_dir=memory_dir,
+    ))
+
+
+@graph_group.command("reflect")
+@click.option("--target", type=click.Path(file_okay=False, path_type=Path), default=None)
+@click.option("--memory-dir", type=click.Path(file_okay=False, path_type=Path), default=None)
+@click.option("--out", type=click.Path(dir_okay=False, path_type=Path), default=None)
+def graph_reflect_cmd(target, memory_dir, out):
+    """Aggregate memory outcomes into a deterministic lessons doc."""
+    from sdd.commands.graph import run_graph_reflect
+    sys.exit(run_graph_reflect(target=target, memory_dir=memory_dir, out=out))
 
 
 # -----------------------------------------------------------------------------

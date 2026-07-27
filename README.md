@@ -35,7 +35,7 @@ The plugin requires `pip install 'sdd-plus-plus[serve]'` so the `sdd` binary is 
 
 **Optional but powerful: a shared findings wiki.** Point `wiki.repo` in your config at a git repo and findings stop being trapped per-codebase — they become an org-wide knowledge layer that Bob reads before scaffolding and Dana publishes to after review. See [`CONFIG.md`](./CONFIG.md) and [`examples/sdd-config.example.yaml`](./examples/sdd-config.example.yaml).
 
-**Optional: Graphify knowledge-graph search.** This repo dogfoods [Graphify](https://github.com/Graphify-Labs/graphify) for architecture / dependency questions (`graphify query` / `path` / `explain` against `graphify-out/graph.json`). Findings lifecycle still uses `sdd findings` / MCP. See [docs/how-to-use.md](./docs/how-to-use.md#optional-graphify-knowledge-graph-search).
+**Optional: Graphify knowledge-graph search.** This repo dogfoods [Graphify](https://github.com/Graphify-Labs/graphify) for architecture / dependency questions via `sdd graph query|path|explain` (and MCP `kb_*` on `sdd serve`). Findings lifecycle still uses `sdd findings` / MCP. Playbook: [`.governance/wiki/graph-engineering.md`](./.governance/wiki/graph-engineering.md). Also [docs/how-to-use.md](./docs/how-to-use.md#optional-graphify-knowledge-graph-search).
 
 ---
 
@@ -81,6 +81,16 @@ sdd findings add                        # Record a finding via $EDITOR
 sdd findings add --from-task BBS-127    # Pre-fill from task context
 sdd findings list --capability auth     # List findings filtered by capability or tag
 sdd findings show <id>                  # Show a finding's full content
+
+# Graph engineering — optional Graphify companion (pipx install graphifyy)
+sdd graph status                        # graphify on PATH? graph.json present?
+sdd graph update                        # refresh AST graph (no API key)
+sdd graph query "what connects X to Y?"
+sdd graph path "A" "B"
+sdd graph explain "symbol"
+sdd graph memory save --question "..." --answer "..." --outcome useful
+sdd graph reflect                       # aggregate memory → lessons
+# Playbook: .governance/wiki/graph-engineering.md  ·  Cursor: /sdd-graph
 
 # Tech debt backlog — findings tagged tech-debt | vulnerability | code-smell
 make debt                               # List debt / vulns / smells
