@@ -265,29 +265,50 @@ The AI can query and draft — it cannot accept plans, confirm findings, or edit
 
 For cross-cutting architecture and “what connects to what” questions, this repo
 also supports [Graphify](https://github.com/Graphify-Labs/graphify) alongside the
-MCP tools above.
+MCP tools above — exposed as **`sdd graph`** for developers and **`kb_*`** MCP
+tools for AI clients. See the playbook:
+[`.governance/wiki/graph-engineering.md`](../.governance/wiki/graph-engineering.md).
 
 ```bash
 # once per machine
 pipx install graphifyy   # CLI name is still `graphify`
 graphify cursor install  # writes .cursor/rules/graphify.mdc
 
-# build / refresh the code graph (no API key)
-graphify update .
+# via sdd (preferred for developers)
+sdd graph status
+sdd graph update                              # AST refresh, no API key
+sdd graph query "how does search_findings relate to wiki findings?"
+sdd graph path "findings_dir" "search_findings"
+sdd graph explain "propose_plan"
+sdd graph memory save --question "..." --answer "..." --outcome useful
+sdd graph reflect
 
-# search
-graphify query "how does search_findings relate to wiki findings?"
-graphify path "findings_dir" "search_findings"
-graphify explain "propose_plan"
+# raw graphify still works
+graphify update .
+graphify query "..." --graph graphify-out/graph.json
 ```
 
-The graph lives at `graphify-out/graph.json`. Cursor loads `.cursor/rules/graphify.mdc`
-so agents prefer Graphify for architecture questions, while findings/specs/plans
-still go through `sdd serve`.
+MCP tools on `sdd serve` (when Graphify is available):
+
+| Tool | Behavior |
+|---|---|
+| `kb_query(question)` | Graphify traversal; falls back to `search_findings` |
+| `kb_path(a, b)` | Shortest path |
+| `kb_explain(concept)` | Node + neighbors |
+| `kb_memory_save(...)` | Persist Q&A into `graphify-out/memory` |
+| `kb_reflect()` | Aggregate memory → lessons |
+
+The graph lives at `graphify-out/graph.json` (override with
+`knowledge.graphify.graph_path` in `.governance/config.yaml`). Cursor loads
+`.cursor/rules/graphify.mdc` so agents prefer Graphify for architecture
+questions, while findings/specs/plans still go through `sdd serve`.
 
 To pull markdown wiki docs and PDFs into the graph (semantic pass), run
 `/graphify --update` in an AI assistant, or `graphify extract .` with an LLM
-backend configured. Until then, `graphify update .` keeps the code AST graph current.
+backend configured. Until then, `sdd graph update` / `graphify update .` keeps
+the code AST graph current.
+
+Invoke the full loop in Cursor with `/sdd-graph`.
 
 ---
 

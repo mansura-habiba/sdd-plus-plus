@@ -84,3 +84,14 @@ findings:
   # A finding without consequences is a comment. Keep this on.
   require_consequences: true
   auto_link_capability: true
+
+# ---------- Knowledge graph (optional Graphify companion) ----------
+# Install separately: pipx install graphifyy  (CLI name is still `graphify`).
+# sdd does not hard-depend on Graphify. When missing, `sdd graph` / MCP kb_*
+# print an install hint; kb_query falls back to search_findings.
+knowledge:
+  graphify:
+    enabled: true
+    graph_path: graphify-out/graph.json
+    # For a multi-repo workspace graph, point at the global merge instead:
+    # graph_path: ~/.graphify/global-graph.json

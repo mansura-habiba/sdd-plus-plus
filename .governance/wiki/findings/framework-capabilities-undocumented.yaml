@@ -1,0 +1,32 @@
+id: framework-capabilities-undocumented
+title: "CLI, MCP serve, and findings storage have no capability specs"
+status: suspected
+severity: high
+discovered_by: "@mansurah"
+discovered_at: "2026-07-24"
+discovered_during: "DEBT-1"
+ai_assistance: suggested
+tags:
+  - tech-debt
+  - dogfooding
+finding: |
+  The shipping product surface — sdd CLI, sdd serve MCP tools, findings
+  lifecycle, progress, validate — is not described by any capability in
+  REGISTRY.yaml. Roadmap entries cover mutation-testing and elicitation, while
+  the code the team ships daily has no contract, forbidden list, or cases.
+  Agents cannot bound work against a real product spec.
+evidence:
+  - ".governance/capabilities/REGISTRY.yaml — only example-feature, mutation-testing, elicitation-and-escalation"
+  - "src/sdd/commands/ — CLI/MCP implementation without matching capability folders"
+implications: |
+  Dogfood: human-author capability specs for core framework surfaces before
+  large refactors. Until then, treat framework changes as high-risk and ask
+  before expanding scope.
+mitigation:
+  - "Human-authored specs for finding-storage, mcp-serve, cli-core (or equivalent)"
+status_history:
+  - date: "2026-07-24"
+    status: suspected
+    by: "@mansurah"
+    note: "Seeded from DEBT-1 dogfooding gap."
+notes: "AI-suggested; human must confirm. AI must not author the missing specs."

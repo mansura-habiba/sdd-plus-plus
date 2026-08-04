@@ -1,0 +1,29 @@
+id: no-accepted-plans-in-repo
+title: "Doctor reports zero accepted plans — AI work lacks human signoff trail"
+status: suspected
+severity: medium
+discovered_by: "@mansurah"
+discovered_at: "2026-07-24"
+discovered_during: "DEBT-1"
+ai_assistance: suggested
+tags:
+  - tech-debt
+  - process
+finding: |
+  sdd doctor scores 7/9 and flags that no plan has been accepted. Only the
+  example draft plan exists. Without accepted plans, merged AI-assisted changes
+  lack the ownership gate the principles require (authority + evidence chain).
+evidence:
+  - "sdd doctor — milestone 'At least one accepted plan' failing"
+  - ".governance/plan/example.plan.yaml — status: draft"
+implications: |
+  Before non-trivial AI implementation, draft a real plan and have a human run
+  sdd plan accept. Treat example.plan.yaml as illustrative only.
+mitigation:
+  - "Accept a real plan for the next implementation task via sdd plan accept"
+status_history:
+  - date: "2026-07-24"
+    status: suspected
+    by: "@mansurah"
+    note: "Seeded from DEBT-1 / sdd doctor."
+notes: "AI-suggested; human must confirm."

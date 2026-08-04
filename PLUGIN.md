@@ -52,6 +52,7 @@ The two agents are designed to hand off to each other. Bob never edits productio
 | `/sdd-doctor` | Run the 8-milestone adoption diagnostic; report what's complete and what's missing. |
 | `/sdd-finding-add` | Record a finding. Pushes back if `consequences` are vague. Hands off to Dana for ingestion. |
 | `/sdd-review <task-id>` | Open a structured peer review on a task card. Hands off to Dana. |
+| `/sdd-graph` | Graph-engineering loop: `sdd graph` / MCP `kb_*` query → critique → memory save. |
 | `/sdd-config [show\|init\|validate\|sources]` | Inspect or initialize the layered config — global, project, env vars. See `CONFIG.md`. |
 
 ### MCP server

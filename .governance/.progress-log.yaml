@@ -22,6 +22,26 @@
     kind: validate
     message: 5 passed, 0 failed, 0 cross-ref issues.
     actor: '@stoic-exciting-sagan'
+  - ts: '2026-07-24T13:03:04Z'
+    kind: validate
+    message: 5 passed, 0 failed, 0 cross-ref issues.
+    actor: '@mansurah'
+  - ts: '2026-07-24T13:03:29Z'
+    kind: doctor
+    message: 7/9 milestones passed.
+    actor: '@mansurah'
+  - ts: '2026-07-24T13:05:24Z'
+    kind: progress
+    message: 'DEBT-1: enabled tech-debt backlog via findings tags + make debt; seeded 4 suspected findings'
+    actor: '@mansurah'
+  - ts: '2026-07-24T13:05:24Z'
+    kind: proposal
+    message: Re-auth gh (github.ibm.com), open DEBT-1 issue, add to users/MANSURAH/projects/3
+    actor: '@mansurah'
+  - ts: '2026-07-24T13:05:24Z'
+    kind: validate
+    message: 9 passed, 0 failed, 0 cross-ref issues.
+    actor: unknown
   - ts: '2026-07-23T08:08:33Z'
     kind: validate
     message: 4 passed, 1 failed, 0 cross-ref issues.
@@ -30,3 +50,33 @@
     kind: validate
     message: 5 passed, 0 failed, 0 cross-ref issues.
     actor: '@mansurah'
+  - ts: '2026-07-24T14:45:14Z'
+    kind: progress
+    message: 'DOCS-1: added docs/sdlc-guide.html lifecycle guide + README link'
+    actor: '@mansurah'
+  - ts: '2026-07-26T09:33:44Z'
+    kind: validate
+    message: 9 passed, 0 failed, 0 cross-ref issues.
+    actor: '@mansurah'
+  - ts: '2026-07-26T09:34:38Z'
+    kind: validate
+    message: 9 passed, 0 failed, 0 cross-ref issues.
+    actor: '@mansurah'
+  - ts: '2026-07-26T09:34:38Z'
+    kind: progress
+    message: 'GRAPHIFY-2: shipped sdd graph CLI + MCP kb_* tools, playbook, tests'
+    actor: '@cursor'
+  - ts: '2026-07-26T09:34:38Z'
+    kind: proposal
+    message: 'Human: gh auth login -h github.ibm.com, open GRAPHIFY-2 issue, add to users/MANSURAH/projects/3;
+      author graph-engineering/spec.yaml + REGISTRY roadmap entry'
+    actor: '@cursor'
+  - ts: '2026-07-26T09:34:57Z'
+    kind: session-end
+    message: 'GRAPHIFY-2 complete locally: sdd graph + kb_* MCP + playbook; GitHub issue + capability
+      spec blocked on human'
+    actor: '@cursor'
+  - ts: '2026-07-26T11:18:45Z'
+    kind: progress
+    message: 'GRAPHIFY-2: opened GitHub issue #8; project board add needs gh auth refresh (read:project)'
+    actor: '@cursor'

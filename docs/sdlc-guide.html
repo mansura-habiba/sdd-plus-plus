@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SDD++ — Software Development Lifecycle Guide</title>
+<meta name="description" content="How to use sdd-plus-plus across the software development lifecycle: bootstrap, define, plan, build, learn, gate, continue.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0b1220;
+    --ink-2: #121c2e;
+    --fog: #8b9bb4;
+    --paper: #e8eef7;
+    --paper-soft: #c5d0e0;
+    --teal: #2ec4b6;
+    --teal-dim: #1a8f85;
+    --amber: #e9b949;
+    --coral: #e07a5f;
+    --human: #e9b949;
+    --ai: #2ec4b6;
+    --gate: #e07a5f;
+    --line: rgba(232, 238, 247, 0.12);
+    --glow: rgba(46, 196, 182, 0.18);
+    --sans: "IBM Plex Sans", "Segoe UI", sans-serif;
+    --display: "Syne", "IBM Plex Sans", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    color: var(--paper);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    background:
+      radial-gradient(ellipse 90% 60% at 10% -10%, var(--glow), transparent 55%),
+      radial-gradient(ellipse 70% 50% at 100% 20%, rgba(233, 185, 73, 0.08), transparent 50%),
+      linear-gradient(165deg, var(--ink) 0%, var(--ink-2) 45%, #0a1628 100%);
+    min-height: 100vh;
+  }
+
+  a { color: var(--teal); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  a:hover { color: var(--paper); }
+
+  .wrap { width: min(1100px, calc(100% - 2.5rem)); margin: 0 auto; }
+
+  /* —— Hero: one composition —— */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 4rem 0 5rem;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    inset: -20% 40% auto -10%;
+    height: 70%;
+    background:
+      radial-gradient(circle at 30% 40%, rgba(46, 196, 182, 0.22), transparent 55%),
+      radial-gradient(circle at 70% 60%, rgba(233, 185, 73, 0.12), transparent 50%);
+    filter: blur(8px);
+    animation: drift 14s ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+  @keyframes drift {
+    from { transform: translate3d(0, 0, 0) scale(1); }
+    to { transform: translate3d(4%, 3%, 0) scale(1.05); }
+  }
+
+  .brand {
+    position: relative;
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: clamp(3.2rem, 10vw, 5.5rem);
+    letter-spacing: -0.04em;
+    line-height: 0.95;
+    margin: 0 0 1.25rem;
+    background: linear-gradient(120deg, var(--paper) 20%, var(--teal) 90%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: rise 0.9s ease-out both;
+  }
+  .brand span { color: var(--amber); -webkit-text-fill-color: var(--amber); }
+
+  .hero h1 {
+    position: relative;
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: clamp(1.35rem, 3.2vw, 1.85rem);
+    letter-spacing: -0.02em;
+    margin: 0 0 0.75rem;
+    max-width: 18ch;
+    animation: rise 0.9s 0.08s ease-out both;
+  }
+  .hero .lede {
+    position: relative;
+    max-width: 42ch;
+    color: var(--fog);
+    margin: 0 0 2rem;
+    font-size: 1.05rem;
+    animation: rise 0.9s 0.16s ease-out both;
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  .cta-row {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1rem;
+    animation: rise 0.9s 0.24s ease-out both;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1.15rem;
+    border-radius: 2px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn-primary {
+    background: var(--teal);
+    color: var(--ink);
+  }
+  .btn-primary:hover { background: #4fd4c7; color: var(--ink); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--paper);
+    border-color: var(--line);
+  }
+  .btn-ghost:hover { border-color: var(--teal); color: var(--teal); }
+
+  .rail-preview {
+    position: relative;
+    margin-top: 3.5rem;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.35rem;
+    animation: rise 0.9s 0.32s ease-out both;
+  }
+  .rail-preview a {
+    text-decoration: none;
+    color: var(--fog);
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-weight: 600;
+    padding: 0.65rem 0.4rem;
+    border-top: 2px solid var(--line);
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .rail-preview a:hover,
+  .rail-preview a:focus-visible {
+    color: var(--teal);
+    border-color: var(--teal);
+  }
+  .rail-preview a strong {
+    display: block;
+    font-family: var(--display);
+    font-size: 1.05rem;
+    letter-spacing: -0.02em;
+    text-transform: none;
+    color: var(--paper);
+    margin-bottom: 0.2rem;
+  }
+  @media (max-width: 800px) {
+    .rail-preview { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* —— Sticky stage nav —— */
+  .stage-nav {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    backdrop-filter: blur(12px);
+    background: rgba(11, 18, 32, 0.85);
+    border-bottom: 1px solid var(--line);
+  }
+  .stage-nav .inner {
+    display: flex;
+    gap: 0.25rem;
+    overflow-x: auto;
+    padding: 0.65rem 0;
+    scrollbar-width: none;
+  }
+  .stage-nav a {
+    flex: 0 0 auto;
+    color: var(--fog);
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.4rem 0.75rem;
+    border-radius: 2px;
+  }
+  .stage-nav a.active,
+  .stage-nav a:hover {
+    color: var(--ink);
+    background: var(--teal);
+  }
+
+  /* —— Sections —— */
+  section.stage {
+    padding: 4.5rem 0 3rem;
+    border-bottom: 1px solid var(--line);
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  section.stage.in { opacity: 1; transform: none; }
+
+  .stage-kicker {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin: 0 0 0.5rem;
+  }
+  .stage h2 {
+    font-family: var(--display);
+    font-size: clamp(1.75rem, 3vw, 2.25rem);
+    letter-spacing: -0.03em;
+    margin: 0 0 0.75rem;
+  }
+  .stage .intro {
+    color: var(--fog);
+    max-width: 58ch;
+    margin: 0 0 1.75rem;
+  }
+
+  .split {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 1.5rem;
+    align-items: start;
+  }
+  @media (max-width: 800px) {
+    .split { grid-template-columns: 1fr; }
+  }
+
+  .actors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 1rem;
+  }
+  .chip {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    padding: 0.25rem 0.55rem;
+    border-radius: 2px;
+  }
+  .chip.human { background: rgba(233, 185, 73, 0.18); color: var(--human); }
+  .chip.ai { background: rgba(46, 196, 182, 0.16); color: var(--ai); }
+  .chip.fw { background: rgba(232, 238, 247, 0.08); color: var(--paper-soft); }
+  .chip.gate { background: rgba(224, 122, 95, 0.18); color: var(--gate); }
+
+  ol.steps {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: step;
+  }
+  ol.steps li {
+    position: relative;
+    padding: 0.85rem 0 0.85rem 2.75rem;
+    border-top: 1px dashed var(--line);
+    color: var(--paper-soft);
+  }
+  ol.steps li:first-child { border-top: none; }
+  ol.steps li::before {
+    counter-increment: step;
+    content: counter(step, decimal-leading-zero);
+    position: absolute;
+    left: 0;
+    top: 0.95rem;
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    color: var(--teal);
+  }
+  ol.steps strong { color: var(--paper); font-weight: 600; }
+
+  pre, .cmd {
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    line-height: 1.55;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--teal);
+    padding: 1rem 1.1rem;
+    overflow-x: auto;
+    margin: 0;
+    color: var(--paper);
+  }
+  .side-note {
+    padding: 1rem 1.1rem;
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--amber);
+    background: rgba(233, 185, 73, 0.06);
+    color: var(--fog);
+    font-size: 0.92rem;
+  }
+  .side-note strong { color: var(--amber); }
+
+  .dont {
+    margin-top: 1.25rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid rgba(224, 122, 95, 0.35);
+    background: rgba(224, 122, 95, 0.07);
+    color: var(--paper-soft);
+    font-size: 0.92rem;
+  }
+  .dont strong { color: var(--coral); }
+
+  /* Model */
+  .model {
+    padding: 3.5rem 0 1rem;
+  }
+  .model h2 {
+    font-family: var(--display);
+    font-size: 1.6rem;
+    letter-spacing: -0.02em;
+    margin: 0 0 0.5rem;
+  }
+  .model p { color: var(--fog); max-width: 60ch; }
+  .triad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+  @media (max-width: 700px) { .triad { grid-template-columns: 1fr; } }
+  .triad article {
+    padding: 1.15rem 1.2rem;
+    border-top: 2px solid var(--teal);
+    background: rgba(255, 255, 255, 0.03);
+  }
+  .triad h3 {
+    font-family: var(--display);
+    margin: 0 0 0.4rem;
+    font-size: 1.1rem;
+  }
+  .triad p { margin: 0; font-size: 0.92rem; color: var(--fog); }
+
+  /* Cheat sheet */
+  .cheat {
+    padding: 3rem 0 5rem;
+  }
+  .cheat h2 {
+    font-family: var(--display);
+    font-size: 1.6rem;
+    margin: 0 0 1rem;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+  th, td {
+    text-align: left;
+    padding: 0.7rem 0.6rem;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  th { color: var(--fog); font-weight: 600; font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; }
+  td code {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--teal);
+  }
+
+  footer {
+    padding: 2rem 0 3rem;
+    border-top: 1px solid var(--line);
+    color: var(--fog);
+    font-size: 0.85rem;
+  }
+  footer .wrap { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="brand">SDD<span>++</span></p>
+    <h1>Software development lifecycle guide</h1>
+    <p class="lede">How humans and AI work the same governed loop — from bootstrap to handoff — without losing the contract.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="#bootstrap">Start the lifecycle</a>
+      <a class="btn btn-ghost" href="#cheat">Command cheat sheet</a>
+    </div>
+    <nav class="rail-preview" aria-label="Lifecycle stages">
+      <a href="#bootstrap"><strong>01</strong> Bootstrap</a>
+      <a href="#define"><strong>02</strong> Define</a>
+      <a href="#plan"><strong>03</strong> Plan</a>
+      <a href="#build"><strong>04</strong> Build</a>
+      <a href="#learn"><strong>05</strong> Learn</a>
+      <a href="#gate"><strong>06</strong> Gate</a>
+      <a href="#continue"><strong>07</strong> Continue</a>
+    </nav>
+  </div>
+</header>
+
+<nav class="stage-nav" aria-label="Stage navigation">
+  <div class="wrap inner">
+    <a href="#bootstrap">Bootstrap</a>
+    <a href="#define">Define</a>
+    <a href="#plan">Plan</a>
+    <a href="#build">Build</a>
+    <a href="#learn">Learn</a>
+    <a href="#gate">Gate</a>
+    <a href="#continue">Continue</a>
+    <a href="#cheat">Cheat sheet</a>
+  </div>
+</nav>
+
+<div class="wrap model">
+  <h2>Three actors, one workspace</h2>
+  <p>The framework lives in <code>.governance/</code>. Humans own decisions. Agents draft and execute. The framework enforces the contract.</p>
+  <div class="triad">
+    <article>
+      <h3>Human</h3>
+      <p>Writes/accepts specs and plans, confirms findings, opens PRs, owns merges.</p>
+    </article>
+    <article>
+      <h3>AI agent</h3>
+      <p>Challenges first, drafts plans, generates code/tests, surfaces suspected findings, records progress.</p>
+    </article>
+    <article>
+      <h3>Framework</h3>
+      <p>Schemas, CLI, MCP (<code>sdd serve</code>), CI gates — the shared source of truth.</p>
+    </article>
+  </div>
+</div>
+
+<main class="wrap">
+
+  <section class="stage" id="bootstrap">
+    <p class="stage-kicker">Stage 01</p>
+    <h2>Bootstrap the repo</h2>
+    <p class="intro">Install the tool and scaffold governance so every later stage has a place to land.</p>
+    <div class="actors">
+      <span class="chip human">Human</span>
+      <span class="chip fw">Framework</span>
+    </div>
+    <div class="split">
+      <ol class="steps">
+        <li><strong>Install</strong> the CLI (and MCP extras if you use Cursor / Claude).</li>
+        <li><strong>Run init</strong> in the target repository.</li>
+        <li><strong>Check adoption</strong> with doctor — fix missing milestones early.</li>
+        <li><strong>Wire MCP</strong> so agents call tools instead of grepping blindly.</li>
+      </ol>
+      <div>
+        <pre><code>pip install 'sdd-plus-plus[full]'
+cd your-repo
+sdd init
+sdd doctor
+sdd serve   # MCP for the IDE</code></pre>
+        <p class="side-note" style="margin-top:1rem"><strong>Tip.</strong> Day-one success is a green doctor score trajectory and a real owner handle in the first capability — not a perfect architecture.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="stage" id="define">
+    <p class="stage-kicker">Stage 02</p>
+    <h2>Define capabilities &amp; contracts</h2>
+    <p class="intro">Executable specs beat prompt snippets. Each feature area gets a capability with invariants, forbidden behaviors, and named acceptance cases.</p>
+    <div class="actors">
+      <span class="chip human">Human owns</span>
+      <span class="chip ai">AI may draft</span>
+    </div>
+    <div class="split">
+      <ol class="steps">
+        <li><strong>Register</strong> the capability in <code>REGISTRY.yaml</code>.</li>
+        <li><strong>Author</strong> <code>capabilities/&lt;id&gt;/spec.yaml</code> — purpose, contract, cases, forbidden.</li>
+        <li><strong>Keep principles</strong> and coding standards human-owned; agents load them each session.</li>
+        <li><strong>Validate</strong> before treating the spec as real.</li>
+      </ol>
+      <div>
+        <pre><code>sdd validate
+# Agents (MCP):
+#   get_principles()
+#   get_capability(id)
+#   get_coding_standards()</code></pre>
+        <div class="dont"><strong>Do not</strong> let the agent unsupervised-commit principles, arch_spec, or capability specs. Drafts are fine; humans verify ownership.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="stage" id="plan">
+    <p class="stage-kicker">Stage 03</p>
+    <h2>Task → plan → human accept</h2>
+    <p class="intro">Work starts from a task (Git issue or task card). The agent drafts a plan with a real challenge block. Only a human accepts.</p>
+    <div class="actors">
+      <span class="chip human">Human</span>
+      <span class="chip ai">AI drafts</span>
+      <span class="chip gate">Acceptance gate</span>
+    </div>
+    <div class="split">
+      <ol class="steps">
+        <li><strong>File the task</strong> (issue / task card) with a clear goal.</li>
+        <li><strong>Ask the agent</strong> to draft a plan for that task.</li>
+        <li>Agent loads capability + findings + standards, then <strong>challenges</strong> (concerns + alternatives).</li>
+        <li>Plan saved as <code>status: draft</code>.</li>
+        <li><strong>Human accepts</strong> after review — or rejects with notes.</li>
+      </ol>
+      <div>
+        <pre><code># Agent proposes draft
+sdd plan new --task DOCS-1 --capability &lt;id&gt;
+
+# Human only
+sdd plan accept --id &lt;plan-id&gt; --by @you
+
+# Agents (MCP):
+#   propose_plan(...)
+#   list_findings(capability=...)</code></pre>
+        <div class="dont"><strong>Do not</strong> ask the agent to accept its own plan. If asked, it must refuse.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="stage" id="build">
+    <p class="stage-kicker">Stage 04</p>
+    <h2>Implement against the plan</h2>
+    <p class="intro">Code and tests follow the accepted plan and named case_ids. Smallest diff that satisfies the contract.</p>
+    <div class="actors">
+      <span class="chip ai">AI implements</span>
+      <span class="chip human">Human reviews</span>
+      <span class="chip fw">Spec binds</span>
+    </div>
+    <div class="split">
+      <ol class="steps">
+        <li>Agent reads plan <code>scope</code>, <code>non_goals</code>, and <code>do_not_modify</code>.</li>
+        <li>Search existing patterns before generating new ones.</li>
+        <li>Write tests for <strong>named case_ids</strong> — assert the contract, not the implementation.</li>
+        <li>Run the named contract tests locally; failures mean the code is wrong.</li>
+      </ol>
+      <div>
+        <pre><code>pytest tests/contract/ -k &lt;case_id&gt;
+sdd validate</code></pre>
+        <p class="side-note" style="margin-top:1rem"><strong>Bound authority.</strong> Anything in <code>non_goals</code>, <code>forbidden</code>, or <code>do_not_modify</code> is a hard stop — redesign or escalate.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="stage" id="learn">
+    <p class="stage-kicker">Stage 05</p>
+    <h2>Capture findings &amp; tech debt</h2>
+    <p class="intro">Gotchas, vulnerabilities, and rough code become findings — not chat lore. Tech debt uses the same store with triage tags.</p>
+    <div class="actors">
+      <span class="chip ai">AI suggests</span>
+      <span class="chip human">Human confirms</span>
+    </div>
+    <div class="split">
+      <ol class="steps">
+        <li>During work, agent files <code>status: suspected</code> findings.</li>
+        <li>Tag debt: <code>tech-debt</code>, <code>vulnerability</code>, or <code>code-smell</code>.</li>
+        <li>Human confirms, mitigates, or refutes.</li>
+        <li>Future sessions load findings before generating related code.</li>
+      </ol>
+      <div>
+        <pre><code>sdd findings add --from-task DEBT-1 --title "…"
+sdd findings list --tag tech-debt
+make debt
+make debt-open
+
+# MCP: propose_finding / list_findings / search_findings</code></pre>
+        <p class="side-note" style="margin-top:1rem"><strong>Convention.</strong> See <code>.governance/wiki/debt-backlog.md</code> — do not invent a second backlog.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="stage" id="gate">
+    <p class="stage-kicker">Stage 06</p>
+    <h2>Validate, CI, and PR ownership</h2>
+    <p class="intro">Evidence before merge. Schemas, cross-refs, and human ownership disclosure gate the change.</p>
+    <div class="actors">
+      <span class="chip gate">CI gate</span>
+      <span class="chip human">Human owns PR</span>
+      <span class="chip fw">Framework</span>
+    </div>
+    <div class="split">
+      <ol class="steps">
+        <li>Run <code>sdd validate</code> locally before claiming done.</li>
+        <li>Confirm acceptance cases for touched case_ids pass.</li>
+        <li>Open a PR with task + plan IDs and ownership disclosure.</li>
+        <li>CI governance workflow re-checks the contract.</li>
+      </ol>
+      <div>
+        <pre><code>sdd validate
+sdd doctor
+# Then open PR — link task + accepted plan</code></pre>
+        <div class="dont"><strong>Do not</strong> weaken contract tests or skip schema failures to “make green.” Fix the artifact.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="stage" id="continue">
+    <p class="stage-kicker">Stage 07</p>
+    <h2>Progress &amp; session handoff</h2>
+    <p class="intro">Compaction beats endless context. Record what happened so the next session (human or agent) starts clean.</p>
+    <div class="actors">
+      <span class="chip ai">AI summarizes</span>
+      <span class="chip human">Human edits</span>
+      <span class="chip fw">progress.md</span>
+    </div>
+    <div class="split">
+      <ol class="steps">
+        <li>After milestones, append progress events.</li>
+        <li>At session end, write a tight summary (what landed, what’s left).</li>
+        <li>Next session loads <code>get_progress()</code> instead of replaying the whole chat.</li>
+        <li>Park follow-ups in Pending actions / roadmap — not only in chat.</li>
+      </ol>
+      <div>
+        <pre><code>sdd update-status --kind milestone --message "…"
+sdd update-status --kind session-end --message "…"
+sdd progress refresh
+
+# MCP: record_progress / record_session_end / get_progress</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <section class="cheat" id="cheat">
+    <h2>Command cheat sheet</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>When</th>
+          <th>CLI</th>
+          <th>MCP (via <code>sdd serve</code>)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Start a repo</td>
+          <td><code>sdd init</code> · <code>sdd doctor</code></td>
+          <td><code>get_instructions</code> · <code>get_principles</code></td>
+        </tr>
+        <tr>
+          <td>Understand contracts</td>
+          <td><code>sdd validate</code></td>
+          <td><code>list_capabilities</code> · <code>get_capability</code> · <code>get_arch_spec</code></td>
+        </tr>
+        <tr>
+          <td>Plan work</td>
+          <td><code>sdd plan new</code> · <code>sdd plan accept</code></td>
+          <td><code>propose_plan</code> · <code>get_plan</code> · <code>list_plans</code></td>
+        </tr>
+        <tr>
+          <td>Capture knowledge / debt</td>
+          <td><code>sdd findings …</code> · <code>make debt</code></td>
+          <td><code>propose_finding</code> · <code>list_findings</code> · <code>search_findings</code></td>
+        </tr>
+        <tr>
+          <td>Handoff</td>
+          <td><code>sdd update-status</code> · <code>sdd progress</code></td>
+          <td><code>record_progress</code> · <code>record_session_end</code> · <code>get_progress</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p style="margin-top:2rem;color:var(--fog);max-width:62ch">
+      Canonical day-to-day prose: <code>.governance/USAGE.md</code>.
+      AI standing orders: <code>AGENTS.md</code> / <code>.governance/instructions.md</code>.
+      System overview (architecture): <code>whitepaper/sdd-plus-plus-overview.html</code>.
+    </p>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>SDD++ lifecycle guide · DOCS-1 · operational companion to USAGE.md</span>
+    <span><a href="../README.md">README</a> · <a href="../.governance/USAGE.md">USAGE</a></span>
+  </div>
+</footer>
+
+<script>
+  const stages = document.querySelectorAll("section.stage");
+  const navLinks = document.querySelectorAll(".stage-nav a");
+
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      if (e.isIntersecting) e.target.classList.add("in");
+    });
+  }, { threshold: 0.15 });
+  stages.forEach((s) => io.observe(s));
+
+  const spy = new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      if (!e.isIntersecting) return;
+      const id = e.target.id;
+      navLinks.forEach((a) => {
+        a.classList.toggle("active", a.getAttribute("href") === "#" + id);
+      });
+    });
+  }, { rootMargin: "-40% 0px -50% 0px", threshold: 0 });
+  stages.forEach((s) => spy.observe(s));
+  const cheat = document.getElementById("cheat");
+  if (cheat) spy.observe(cheat);
+</script>
+</body>
+</html>

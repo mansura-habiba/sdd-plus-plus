@@ -11,6 +11,7 @@ Tool list (v0.3):
   - list_findings(capability?, tag?, status?)
   - get_finding(finding_id)
   - search_findings(query)
+  - kb_query / kb_path / kb_explain / kb_memory_save / kb_reflect  — optional Graphify
   - validate()
   - get_progress()
   - record_progress(message, kind?)
@@ -234,6 +235,112 @@ def _impl_search_findings(query: str, target: Path | None = None) -> list[dict]:
                 "snippet": (fm.get("finding") or "")[:240],
             })
     return out
+
+
+def _impl_kb_query(question: str, target: Path | None = None) -> dict:
+    """Prefer Graphify query; fall back to search_findings when unavailable."""
+    from sdd.commands import _graphify as gfy
+
+    st = gfy.status(target)
+    if st.enabled and st.graphify_bin and st.graph_exists:
+        result = gfy.query(question, target=target)
+        if result.ok:
+            return {
+                "source": "graphify",
+                "ok": True,
+                "output": result.stdout,
+                "graph_path": str(st.graph_path),
+            }
+        # Graphify present but query failed — still try findings, note the error.
+        findings = _impl_search_findings(question, target)
+        return {
+            "source": "findings_fallback",
+            "ok": True,
+            "graphify_error": result.error,
+            "findings": findings,
+            "hint": st.message,
+        }
+
+    findings = _impl_search_findings(question, target)
+    return {
+        "source": "findings_fallback",
+        "ok": True,
+        "findings": findings,
+        "hint": st.message if not st.graph_exists or not st.graphify_bin else None,
+        "install_hint": gfy.INSTALL_HINT if not st.graphify_bin else None,
+    }
+
+
+def _impl_kb_path(a: str, b: str, target: Path | None = None) -> dict:
+    from sdd.commands import _graphify as gfy
+
+    result = gfy.path_between(a, b, target=target)
+    if result.ok:
+        return {"source": "graphify", "ok": True, "output": result.stdout}
+    return {
+        "source": "graphify",
+        "ok": False,
+        "error": result.error or result.stderr or "kb_path failed",
+        "install_hint": gfy.INSTALL_HINT if gfy.find_graphify_bin() is None else None,
+    }
+
+
+def _impl_kb_explain(concept: str, target: Path | None = None) -> dict:
+    from sdd.commands import _graphify as gfy
+
+    result = gfy.explain(concept, target=target)
+    if result.ok:
+        return {"source": "graphify", "ok": True, "output": result.stdout}
+    return {
+        "source": "graphify",
+        "ok": False,
+        "error": result.error or result.stderr or "kb_explain failed",
+        "install_hint": gfy.INSTALL_HINT if gfy.find_graphify_bin() is None else None,
+    }
+
+
+def _impl_kb_memory_save(
+    question: str,
+    answer: str,
+    result_type: str = "query",
+    nodes: list[str] | None = None,
+    outcome: str | None = None,
+    correction: str | None = None,
+    target: Path | None = None,
+) -> dict:
+    from sdd.commands import _graphify as gfy
+
+    result = gfy.save_memory(
+        question=question,
+        answer=answer,
+        target=target,
+        result_type=result_type,
+        nodes=nodes,
+        outcome=outcome,
+        correction=correction,
+    )
+    if result.ok:
+        return {"source": "graphify", "ok": True, "output": result.stdout or "saved"}
+    return {
+        "source": "graphify",
+        "ok": False,
+        "error": result.error or result.stderr or "kb_memory_save failed",
+        "install_hint": gfy.INSTALL_HINT if gfy.find_graphify_bin() is None else None,
+    }
+
+
+def _impl_kb_reflect(target: Path | None = None) -> dict:
+    from sdd.commands import _graphify as gfy
+
+    result = gfy.reflect(target=target)
+    if result.ok:
+        return {"source": "graphify", "ok": True, "output": result.stdout}
+    return {
+        "source": "graphify",
+        "ok": False,
+        "error": result.error or result.stderr or "kb_reflect failed",
+        "install_hint": gfy.INSTALL_HINT if gfy.find_graphify_bin() is None else None,
+    }
 
 
 def _impl_validate(target: Path | None = None) -> dict:
@@ -535,6 +642,47 @@ def _build_mcp() -> Any:
     def search_findings(query: str) -> list[dict]:
         """Substring search over finding titles, body, and tags."""
         return _impl_search_findings(query, _get_target())
+
+    @mcp.tool()
+    def kb_query(question: str) -> dict:
+        """Graph-engineering query: prefer Graphify traversal, else search_findings.
+
+        Use for architecture / 'what connects to what' questions. Findings lifecycle
+        (status, confirm) still uses list_findings / get_finding / search_findings.
+        """
+        return _impl_kb_query(question, _get_target())
+
+    @mcp.tool()
+    def kb_path(a: str, b: str) -> dict:
+        """Shortest path between two graph nodes (requires graphify + graph.json)."""
+        return _impl_kb_path(a, b, _get_target())
+
+    @mcp.tool()
+    def kb_explain(concept: str) -> dict:
+        """Explain a graph node and its neighbors (requires graphify + graph.json)."""
+        return _impl_kb_explain(concept, _get_target())
+
+    @mcp.tool()
+    def kb_memory_save(
+        question: str,
+        answer: str,
+        result_type: str = "query",
+        nodes: list[str] | None = None,
+        outcome: str | None = None,
+        correction: str | None = None,
+    ) -> dict:
+        """Persist a Q&A into graphify-out/memory so shared graph memory survives chat.
+
+        outcome: useful | dead_end | corrected (optional work-memory signal).
+        """
+        return _impl_kb_memory_save(
+            question, answer, result_type, nodes, outcome, correction, _get_target()
+        )
+
+    @mcp.tool()
+    def kb_reflect() -> dict:
+        """Aggregate graph memory outcomes into a deterministic lessons document."""
+        return _impl_kb_reflect(_get_target())
 
     @mcp.tool()
     def validate() -> dict:

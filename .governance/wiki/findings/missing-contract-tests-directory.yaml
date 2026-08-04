@@ -1,0 +1,30 @@
+id: missing-contract-tests-directory
+title: "No tests/contract suite — case_id contracts are not executable yet"
+status: suspected
+severity: high
+discovered_by: "@mansurah"
+discovered_at: "2026-07-24"
+discovered_during: "DEBT-1"
+ai_assistance: suggested
+tags:
+  - tech-debt
+  - test-quality
+finding: |
+  sdd doctor reports tests/contract/ is missing or empty. Specs declare
+  acceptance cases, but there is no contract test layer asserting those
+  case_ids. Principles require executable contracts; without this directory
+  the evidence chain stops at YAML.
+evidence:
+  - "sdd doctor — milestone 'tests/contract/ present with at least one test file' failing"
+implications: |
+  When implementing a capability with cases, add tests/contract/ tests that
+  reference case_ids. Do not claim done based only on unit tests that mirror
+  current implementation.
+mitigation:
+  - "Add tests/contract/ with at least one case_id-linked test for an active capability"
+status_history:
+  - date: "2026-07-24"
+    status: suspected
+    by: "@mansurah"
+    note: "Seeded from DEBT-1 / sdd doctor."
+notes: "AI-suggested; human must confirm."
