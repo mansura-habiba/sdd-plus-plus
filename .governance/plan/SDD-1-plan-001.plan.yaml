@@ -1,0 +1,152 @@
+# yaml-language-server: $schema=../../src/sdd/_schemas/plan.schema.yaml
+#
+# Draft implementation plan for GitHub issue #1.
+# Only a human may accept this plan with `sdd plan accept`.
+
+plan_id: SDD-1-plan-001
+task_id: "#1"
+capability: automated-agent-harness
+
+generated_by:
+  tool: chatgpt
+  model: GPT-5.6 Thinking
+  generated_at: "2026-08-04T13:35:00Z"
+
+status: draft
+
+challenge:
+  understood_request: |
+    Add a reusable SDD++ capability that lets developers bootstrap and operate automated
+    agentic development sessions with bounded autonomy, persistent evidence, isolated
+    execution, and limited but decisive human pause, stop, redirect, takeover, and release
+    controls. The harness must coordinate existing agents rather than become another agent.
+  concerns:
+    - "A single first release containing scaffolding, provider process execution, GitHub issue selection, worktrees, PR automation, MCP tools, and distributed scheduling would be too broad to validate safely. The first implementation should establish contracts, scaffolding, state, and human controls before adding live provider execution."
+    - "Provider CLIs and SDKs change independently. Embedding Codex- or Claude-specific command semantics in core would make the capability brittle; provider execution must be an adapter contract."
+    - "Limited human override is unsafe if it is only a UI flag. Overrides must be append-only events checked before every new action, with stop/takeover taking precedence over agent progress."
+    - "The repository forbids AI-authored capability contracts. A human must author and accept the capability spec and acceptance case IDs before implementation begins."
+  alternatives_considered:
+    - "Build a complete coding agent inside SDD++. Rejected: SDD++ should govern external agents, not reproduce their intelligence or tool loops."
+    - "Generate only a GitHub Actions workflow. Rejected: workflow YAML alone does not define leases, resumability, evidence, permissions, or human override semantics."
+    - "First release as scaffold + validation + session-state/control contracts + provider adapter interface, followed by execution adapters. Recommended because it creates a stable governed foundation with independently testable value."
+
+scope:
+  in_scope:
+    - "Add a provider-neutral automated-agent-harness capability template for adopters."
+    - "Add `sdd harness init`, `sdd harness validate`, `sdd harness status`, and human control commands for pause, resume, stop, takeover, and release."
+    - "Generate `.governance/harness/` configuration, prompts, run/event/override directories, documentation, and a non-auto-merging GitHub Actions reference workflow."
+    - "Define schemas and Python models for harness configuration, session state, leases, events, overrides, autonomy profiles, and provider adapter capabilities."
+    - "Implement append-only local session events and deterministic state reconstruction for the reference implementation."
+    - "Integrate validation, doctor output, progress evidence, and MCP read/control surfaces where appropriate."
+    - "Add contract, CLI, schema, and end-to-end tests plus README and configuration documentation."
+  non_goals:
+    - "Do not build a new coding model or autonomous reasoning engine."
+    - "Do not embed Codex, Claude Code, Cursor, or another vendor as the canonical runtime."
+    - "Do not implement automatic merge, deployment, secret administration, branch-protection changes, or governance-spec authorship."
+    - "Do not implement unrestricted continuous autonomy; every profile has leases, budgets, stop conditions, and human override."
+    - "Do not author `.governance/capabilities/automated-agent-harness/spec.yaml`; the human owner must provide the capability contract and case IDs."
+
+ai_context:
+  required_reading:
+    - AGENTS.md
+    - .governance/wiki/principles.md
+    - .governance/wiki/coding-standards.md
+    - .governance/arch_spec.md
+    - .governance/capabilities/automated-agent-harness/spec.yaml
+    - README.md
+    - CONFIG.md
+    - src/sdd/cli.py
+    - src/sdd/commands/init.py
+    - src/sdd/commands/serve.py
+  do_not_modify:
+    - .governance/wiki/principles.md
+    - .governance/instructions.md
+    - AGENTS.md
+    - .governance/capabilities/automated-agent-harness/spec.yaml
+    - .github/workflows/release.yml
+  preferred_patterns:
+    - "Provider-neutral protocol with adapters; core contracts contain no vendor-specific CLI flags."
+    - "Append-only events plus deterministic projection for resumable session state."
+    - "One task lease per execution lane; optimistic concurrency through expected revision."
+    - "Generated artifacts are safe by default: no automatic merge, deploy, or privileged action."
+    - "Small Click command group delegating implementation to `sdd.commands.harness`."
+    - "Stdlib plus existing dependencies unless a human approves a new dependency."
+
+steps:
+  - "Human authors and approves `.governance/capabilities/automated-agent-harness/spec.yaml` with acceptance case IDs, then accepts this plan."
+  - "Document the harness architecture, trust model, autonomy profiles, lifecycle, adapter boundary, event model, override precedence, and v1 limitations."
+  - "Add bundled schemas and Python contracts for harness config, run state, session events, leases, overrides, and adapter descriptors."
+  - "Add bundled templates for `.governance/harness/`, implementation/review/repair prompts, and a safe GitHub Actions reference workflow."
+  - "Implement the `sdd harness` CLI group for init, validate, status, pause, resume, stop, takeover, and release."
+  - "Implement local append-only event storage, atomic state writes, revision checks, and reconstruction of current run state."
+  - "Integrate `sdd doctor`, global validation, progress evidence, and MCP read/control tools without adding plan-accept or merge authority."
+  - "Add schema tests, lifecycle transition tests, override-precedence tests, init/force/dry-run tests, validation tests, and end-to-end CLI scenarios."
+  - "Update README, CONFIG, generated governance usage docs, and provider-adapter authoring guidance."
+  - "Run all verification commands and map every accepted capability case to passing evidence before opening the implementation PR."
+
+files_to_touch:
+  - src/sdd/cli.py
+  - src/sdd/commands/harness.py
+  - src/sdd/commands/init.py
+  - src/sdd/commands/doctor.py
+  - src/sdd/commands/validate.py
+  - src/sdd/commands/serve.py
+  - src/sdd/_paths.py
+  - src/sdd/_schemas/harness_config.schema.yaml
+  - src/sdd/_schemas/harness_run.schema.yaml
+  - src/sdd/_schemas/harness_event.schema.yaml
+  - src/sdd/templates/harness/harness.yaml
+  - src/sdd/templates/harness/README.md
+  - src/sdd/templates/harness/prompts/implement-task.md
+  - src/sdd/templates/harness/prompts/review-result.md
+  - src/sdd/templates/harness/prompts/repair-failure.md
+  - src/sdd/templates/github/workflows/sdd-agent-harness.yml
+  - src/sdd/templates/capabilities/automated-agent-harness/spec.yaml
+  - tests/test_harness_cli.py
+  - tests/test_harness_state.py
+  - tests/test_harness_validation.py
+  - README.md
+  - CONFIG.md
+
+tests_to_satisfy: []
+
+risks:
+  - "Capability case IDs are not yet available because the human-authored spec does not exist; implementation must not start until this is resolved."
+  - "Concurrent sessions can corrupt leases or state if writes are not atomic and revision checked."
+  - "A provider command adapter can become a shell-injection path unless arguments are structured and environment access is allowlisted."
+  - "Human override may arrive while an external provider process is running; the reference runtime needs explicit acknowledgement and bounded termination semantics."
+  - "Generated GitHub workflow permissions can be over-broad; the template must use least privilege and no automatic merge."
+  - "Schema and MCP additions expand the public framework contract and require compatibility review."
+
+confidence:
+  overall: 0.78
+  claims:
+    - claim: "A scaffold-first v1 can deliver meaningful value without executing a live provider process."
+      confidence: 0.92
+    - claim: "Append-only local events and deterministic state reconstruction are sufficient for the first resumable reference runtime."
+      confidence: 0.84
+    - claim: "The existing Click, ruamel.yaml, jsonschema, progress, and MCP architecture can support the initial capability without a new mandatory dependency."
+      confidence: 0.76
+    - claim: "A generic provider execution adapter can safely follow after the contracts and controls are stable."
+      confidence: 0.72
+
+notes: |
+  Recommended v1 boundary:
+
+  - scaffold and configuration;
+  - schema validation;
+  - lifecycle and append-only state;
+  - leases and eligibility contracts;
+  - human control commands;
+  - provider adapter interface;
+  - safe reference GitHub workflow;
+  - no live provider process execution and no automatic PR creation in the core.
+
+  Human acceptance command after authoring the capability spec:
+
+      sdd plan accept --id SDD-1-plan-001 --by @mansura-habiba
+
+  The learning article is useful for task graphs, autonomous claiming, team coordination,
+  background work, and worktree isolation. It explicitly omits production event hooks,
+  permission governance, advanced session lifecycle, and trust workflows; this plan treats
+  those omissions as mandatory SDD++ responsibilities rather than optional follow-up work.
