@@ -102,6 +102,32 @@ sdd serve                               # Start the MCP server on stdio
 sdd serve --transport http              # HTTP/SSE transport for remote setups
 ```
 
+## Governed automated agent harness — proposed v0.4 capability
+
+SDD++ is proposing a provider-neutral harness that lets developers run bounded,
+repeatable agent sessions while retaining human authority over plans,
+privileged actions, governance changes, merge, and deployment.
+
+Target workflow:
+
+```text
+sdd harness init
+→ configure provider and autonomy profile
+→ validate task and plan readiness
+→ run one isolated agent session
+→ verify evidence
+→ open a pull request
+→ use pause, stop, redirect, or takeover only when required
+```
+
+Read the full [Automated Agent Harness developer guide](docs/automated-agent-harness-guide.md)
+for configuration examples, provider adapters, autonomy profiles, task eligibility,
+leases, worktree isolation, human override, verification, scheduling, events,
+security, failure recovery, and the staged adoption path.
+
+The guide describes the intended capability tracked by issue #1. The `sdd harness`
+commands are not part of the current released CLI yet.
+
 ### Cursor integration
 
 After `pip install 'sdd-plus-plus[serve]'`, add to `.cursor/mcp.json` (per-project) or `~/.cursor/mcp.json` (global):

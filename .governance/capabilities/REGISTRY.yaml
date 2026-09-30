@@ -15,6 +15,15 @@ capabilities:
     one_liner: "Starter capability — rename and edit for your real first capability."
     spec_path: ".governance/capabilities/example-feature/spec.yaml"
 
+  - id: automated-agent-harness
+    name: "Automated Agent Session Harness"
+    status: roadmap
+    target_release: "v0.4"
+    owner: "@mansura-habiba"
+    one_liner: "Bootstrap governed, resumable agentic development sessions with bounded autonomy, isolated execution, evidence, leases, and auditable human override."
+    spec_path: ".governance/capabilities/automated-agent-harness/spec.yaml"
+    tags: [agentic-execution, automation, governance, human-override, roadmap]
+
   - id: mutation-testing
     name: "Mutation Testing"
     status: roadmap
