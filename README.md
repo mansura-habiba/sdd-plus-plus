@@ -2,7 +2,7 @@
 
 > **Spec-Driven Development that ships.** A Python tool that bootstraps any repo with executable specs, structured acceptance criteria, AI assistant rules, and CI gates — designed for AI-assisted teams where juniors, seniors, and AI coding assistants all need to coordinate without losing each other.
 
-[**View the system overview diagram →**](https://raw.githack.com/MANSURAH/sdd-plus-plus/main/whitepaper/sdd-plus-plus-overview.html)
+[**View the system overview diagram →**](https://raw.githack.com/mansura-habiba/sdd-plus-plus/main/whitepaper/sdd-plus-plus-overview.html)
 
 ```bash
 pip install sdd-plus-plus

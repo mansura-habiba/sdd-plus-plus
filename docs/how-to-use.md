@@ -610,7 +610,7 @@ Each step has standalone value. Stop at any step and you're still better off tha
 
 ## Further reading
 
-- [System overview diagram](https://raw.githack.com/MANSURAH/sdd-plus-plus/main/whitepaper/sdd-plus-plus-overview.html)
+- [System overview diagram](https://raw.githack.com/mansura-habiba/sdd-plus-plus/main/whitepaper/sdd-plus-plus-overview.html)
 - [Whitepaper](../whitepaper/whitepaper.md) — the full design rationale, measurement substrate, and benchmarks
 - [USAGE.md](../src/sdd/templates/USAGE.md) — how humans and AI agents work the framework together (bundled with every `sdd init`)
 - [Principles](../src/sdd/templates/wiki/principles.md) — the five governing principles
