@@ -216,4 +216,4 @@ Apache-2.0. See [LICENSE](LICENSE).
 
 ## Status
 
-**Alpha (v0.1.0).** The framework, schemas, and CI workflow are battle-tested in `bee-skill-registry` (the parent project this tool was extracted from). The Python CLI is new. File issues; expect rough edges.
+**Alpha (v0.3.0).** The framework, schemas, and CI workflow are battle-tested in `bee-skill-registry` (the parent project this tool was extracted from). The Python CLI is new. File issues; expect rough edges.
