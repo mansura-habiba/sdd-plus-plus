@@ -1,0 +1,49 @@
+# yaml-language-server: $schema=../../../../../src/sdd/_schemas/finding.schema.yaml
+#
+# Discovered Finding: Wall clock drift in rate limiting calculations.
+# Captures institutional knowledge discovered during implementation.
+
+id: wall-clock-drift
+title: "Wall clock drift causes token bucket over-fill or starvation during NTP steps"
+status: confirmed
+severity: medium
+discovered_by: "@naveen-bhalla"
+discovered_at: "2026-08-10"
+discovered_during: "RL-1"
+ai_assistance: suggested
+
+related_capabilities:
+  - rate-limiter
+
+tags:
+  - concurrency
+  - timing
+  - gotcha
+
+finding: |
+  Using Python's standard `time.time()` for token replenishment arithmetic introduces severe
+  anomalies when system NTP synchronization adjusts the system clock. If the clock jumps forward,
+  tokens refill instantly beyond intended limits. If the clock steps backward, elapsed time becomes
+  negative, causing token calculation to zero out or freeze replenishment until the clock catches up.
+
+evidence:
+  - "PEP 418 analysis on monotonic clocks in Python."
+  - "Unit test fixture simulating backwards system clock step resulted in negative token delta when using time.time()."
+
+implications: |
+  All time-based rate limiters, token buckets, and exponential backoff timers must strictly use
+  `time.monotonic()` or `time.monotonic_ns()`. Never use `time.time()` for duration or rate calculation.
+
+mitigation:
+  - "Enforce `time.monotonic()` in TokenBucket implementation."
+  - "Add defensive guard `elapsed = max(0.0, current_time - last_time)` to eliminate any platform sleep anomalies."
+
+status_history:
+  - date: "2026-08-10"
+    status: suspected
+    by: "@naveen-bhalla"
+    note: "Surfaced during plan challenge review."
+  - date: "2026-08-10"
+    status: confirmed
+    by: "@naveen-bhalla"
+    note: "Confirmed via contract test and code review."

@@ -1,0 +1,154 @@
+# yaml-language-server: $schema=../../../../../src/sdd/_schemas/capability_spec.schema.yaml
+#
+# Capability spec — Token Bucket Rate Limiter.
+# Canonical contract defining inputs, outputs, invariants, acceptance cases, and boundaries.
+# AI is forbidden from editing this file without explicit human direction.
+
+id: rate-limiter
+name: "Token Bucket Rate Limiter"
+purpose: |
+  Provides thread-safe in-memory rate limiting using the classic token bucket algorithm.
+  Protects downstream application services from throughput saturation and bursts by enforcing
+  bounded token capacity with continuous monotonic replenishment. Without this capability,
+  uncontrolled client request spikes would exhaust shared system resources.
+
+status: active
+tier: team
+
+owner:
+  human: "@naveen-bhalla"
+
+# -------------------------------------------------------------------------
+# Contract — the stable interface other capabilities depend on
+# -------------------------------------------------------------------------
+
+contract:
+  inputs:
+    - name: rate
+      shape: "float (tokens per second, rate > 0.0)"
+      description: "Continuous rate at which tokens are added to the bucket."
+    - name: capacity
+      shape: "float (maximum burst tokens, capacity >= 1.0)"
+      description: "Maximum number of tokens the bucket can hold at any point in time."
+    - name: tokens
+      shape: "float (tokens requested to consume, default 1.0, tokens > 0.0)"
+      description: "Number of tokens to acquire for the current operation."
+
+  outputs:
+    - name: allowed
+      shape: "bool"
+      description: "True if sufficient tokens were available and deducted; False otherwise."
+    - name: remaining_tokens
+      shape: "float"
+      description: "Estimated number of tokens remaining in the bucket after the check."
+    - name: retry_after
+      shape: "float (seconds, >= 0.0)"
+      description: "Estimated seconds until enough tokens will be replenished if allowed is False; 0.0 if True."
+
+  invariants:
+    - "Available tokens in the bucket never exceed configured capacity."
+    - "Available tokens in the bucket never drop below zero."
+    - "Token replenishment is strictly monotonic with respect to time elapsed."
+    - "State mutation and token consumption are atomic and thread-safe."
+
+# -------------------------------------------------------------------------
+# Acceptance cases — what contract tests must satisfy
+# -------------------------------------------------------------------------
+
+cases:
+  - id: allow-within-capacity
+    kind: positive
+    priority: critical
+    description: "Requests consuming available tokens within bucket capacity are granted immediately."
+    test_id: "tests/contract/test_rate_limiter.py::test_allow_within_capacity"
+
+  - id: reject-when-exhausted
+    kind: negative
+    priority: critical
+    description: "Requests requesting more tokens than currently available are denied with retry_after > 0."
+    test_id: "tests/contract/test_rate_limiter.py::test_reject_when_exhausted"
+
+  - id: tokens-never-exceed-capacity
+    kind: invariant
+    priority: high
+    description: "Tokens accumulate up to capacity during idle periods and never exceed capacity."
+    test_id: "tests/contract/test_rate_limiter.py::test_tokens_never_exceed_capacity"
+
+  - id: refills-proportionally-over-time
+    kind: positive
+    priority: high
+    description: "Tokens are replenished over time at the configured tokens-per-second rate."
+    test_id: "tests/contract/test_rate_limiter.py::test_refills_proportionally_over_time"
+
+  - id: rejects-invalid-configuration
+    kind: negative
+    priority: high
+    description: "Initializing with non-positive rate or capacity < 1.0 raises ValueError."
+    test_id: "tests/contract/test_rate_limiter.py::test_rejects_invalid_configuration"
+
+  - id: rejects-invalid-token-request
+    kind: negative
+    priority: normal
+    description: "Requesting non-positive or excessive tokens (tokens > capacity) raises ValueError."
+    test_id: "tests/contract/test_rate_limiter.py::test_rejects_invalid_token_request"
+
+  - id: thread-safe-concurrent-consumption
+    kind: invariant
+    priority: critical
+    description: "Concurrent acquire calls across multiple threads maintain exact accounting without over-allocation."
+    test_id: "tests/contract/test_rate_limiter.py::test_thread_safe_concurrent_consumption"
+
+# -------------------------------------------------------------------------
+# Definition of done
+# -------------------------------------------------------------------------
+
+definition_of_done:
+  conditions:
+    - id: all-cases-pass
+      statement: "Every acceptance case above has a passing contract test in tests/contract/test_rate_limiter.py."
+      verifiable_by: contract_test
+      evidence_ref: "tests/contract/test_rate_limiter.py"
+    - id: schema-valid
+      statement: "This spec.yaml validates against capability_spec.schema.yaml."
+      verifiable_by: schema_validation
+
+# -------------------------------------------------------------------------
+# Non-functional requirements
+# -------------------------------------------------------------------------
+
+non_functional:
+  performance: "Single-thread acquire check completes in under 5 microseconds."
+  security: "No unbounded memory allocation per key; invalid inputs fail fast without state corruption."
+  observability: "Return values expose remaining tokens and retry_after for upstream metrics and headers."
+  compatibility: "Pure Python standard library with no external dependencies; compatible with Python >= 3.11."
+
+# -------------------------------------------------------------------------
+# Bounded authority for tasks within this capability
+# -------------------------------------------------------------------------
+
+tasks_must:
+  use_patterns:
+    - "Use time.monotonic() exclusively for time measurement to prevent wall-clock NTP backward jumps."
+    - "Use threading.Lock() around bucket state checks and token deductions."
+  avoid_dependencies:
+    - "Do not introduce Redis, Memcached, or external network services for this in-memory implementation."
+
+forbidden:
+  - "Using time.time() for token replenishment arithmetic."
+  - "Allowing partial deductions when requested tokens exceed available tokens."
+  - "Blocking or sleeping inside acquire() without explicit opt-in parameter."
+
+related_capabilities: []
+
+# -------------------------------------------------------------------------
+# Narrative — design rationale
+# -------------------------------------------------------------------------
+
+notes:
+  design_rationale: |
+    The Token Bucket algorithm was selected over Fixed Window and Sliding Window Log because
+    it provides O(1) time and space complexity per check, smoothly handles bursts up to bucket capacity,
+    and requires minimal in-memory state (only current token count and last update timestamp).
+  open_questions: |
+    Future iterations could introduce per-key multi-tenant limiting (e.g., TokenBucketRegistry)
+    with TTL-based cache eviction for dormant keys.
