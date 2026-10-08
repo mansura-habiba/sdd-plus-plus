@@ -1,0 +1,91 @@
+# yaml-language-server: $schema=../../../../src/sdd/_schemas/plan.schema.yaml
+#
+# Implementation Plan for Token Bucket Rate Limiter (Task RL-1).
+# Demonstrates an accepted SDD++ plan with mandatory challenge pushback and human sign-off.
+
+plan_id: RL-1-plan-001
+task_id: "RL-1"
+capability: rate-limiter
+
+generated_by:
+  tool: "claude-code"
+  model: "claude-3-7-sonnet"
+  generated_at: "2026-08-10T10:00:00Z"
+
+status: accepted
+accepted_by: "@naveen-bhalla"
+accepted_at: "2026-08-10T10:30:00Z"
+
+challenge:
+  understood_request: |
+    Implement an in-memory, thread-safe Token Bucket Rate Limiter according to the
+    rate-limiter capability spec. The implementation must support burst capacity,
+    monotonic token refills, fractional consumption, and precise retry_after estimates.
+  concerns:
+    - "Using system wall clock (time.time) can lead to tokens suddenly overflowing or jumping backward if NTP updates occur during operation."
+    - "High lock contention under heavy concurrency could degrade throughput if lock scope is too broad."
+    - "Floating-point precision rounding could cause subtle token over-allocation if not bounded."
+  alternatives_considered:
+    - "Sliding Window Log: Precise per-request timestamp tracking. Rejected because memory overhead scales linearly with request rate O(N), whereas Token Bucket is O(1) space."
+    - "Leaky Bucket: Enforces strict constant outflow rate. Rejected because it does not support legitimate burst traffic up to bucket capacity."
+    - "Lock-free atomic CAS: Avoids mutex locks. Rejected for v1 to keep implementation stdlib-only and simple to audit."
+
+scope:
+  in_scope:
+    - "TokenBucket class with configurable rate (tokens/sec) and burst capacity."
+    - "RateLimitResult dataclass containing allowed, remaining_tokens, and retry_after."
+    - "acquire() method with support for variable token costs."
+    - "Thread-safe synchronization using threading.Lock."
+    - "Monotonic time calculation via time.monotonic()."
+    - "Contract test suite mapping directly to all case_ids in rate-limiter/spec.yaml."
+  non_goals:
+    - "Do not implement distributed persistence (Redis / Memcached)."
+    - "Do not implement background daemon threads for token replenishment (use lazy computation)."
+    - "Do not implement asynchronous asyncio locks in this sync v1 implementation."
+
+ai_context:
+  required_reading:
+    - ".governance/capabilities/rate-limiter/spec.yaml"
+    - ".governance/capabilities/rate-limiter/design.md"
+  do_not_modify:
+    - ".governance/capabilities/rate-limiter/spec.yaml"
+  preferred_patterns:
+    - "Lazy replenishment calculation on acquire() rather than background tick loops."
+    - "Immutability for result types via frozen dataclass."
+
+steps:
+  - "Define RateLimitResult frozen dataclass in src/rate_limiter/limiter.py."
+  - "Implement TokenBucket.__init__ with input validation for rate > 0 and capacity >= 1.0."
+  - "Implement TokenBucket._replenish() using time.monotonic() and clamped capacity ceiling."
+  - "Implement TokenBucket.acquire(tokens=1.0) with atomic check-and-deduct under threading.Lock."
+  - "Implement contract tests covering all 7 acceptance cases in tests/contract/test_rate_limiter.py."
+  - "Document discovered wall-clock drift gotcha in .governance/wiki/findings/wall-clock-drift.yaml."
+
+files_to_touch:
+  - "src/rate_limiter/__init__.py"
+  - "src/rate_limiter/limiter.py"
+  - "tests/contract/test_rate_limiter.py"
+  - ".governance/wiki/findings/wall-clock-drift.yaml"
+
+tests_to_satisfy:
+  - allow-within-capacity
+  - reject-when-exhausted
+  - tokens-never-exceed-capacity
+  - refills-proportionally-over-time
+  - rejects-invalid-configuration
+  - rejects-invalid-token-request
+  - thread-safe-concurrent-consumption
+
+risks:
+  - "Clock monotonicity: On some virtualized container platforms, time.monotonic() could experience rare sleep/wake pauses; accounted for by clamping elapsed >= 0."
+
+confidence:
+  overall: 0.96
+  claims:
+    - claim: "Token bucket logic is pure math and testable without external services."
+      confidence: 0.99
+    - claim: "Lazy replenishment on acquire() avoids thread leaks and lifecycle overhead."
+      confidence: 0.95
+
+notes: |
+  Plan accepted by human owner after verifying that all non-goals and pushback items are respected.

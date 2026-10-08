@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=../../../../../src/sdd/_schemas/registry.schema.yaml
+#
+# Capability Registry for the Rate Limiter worked example.
+# Lists all capabilities governed by SDD++ in this project.
+
+capabilities:
+  - id: rate-limiter
+    name: "Token Bucket Rate Limiter"
+    status: active
+    target_release: "v1.0"
+    owner: "@naveen-bhalla"
+    one_liner: "In-memory token bucket rate limiter providing burst capacity, monotonic refill, and thread-safe consumption."
+    spec_path: ".governance/capabilities/rate-limiter/spec.yaml"
+    tags:
+      - traffic-management
+      - concurrency
+      - security
